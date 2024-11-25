@@ -1,0 +1,12 @@
+requests
+fluent_discourse
+eventlet
+flask
+redis
+
+# Optional for plugins
+numpy
+pandas
+scipy
+seaborn
+tabulate

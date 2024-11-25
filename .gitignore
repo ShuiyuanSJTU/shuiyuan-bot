@@ -1,0 +1,5 @@
+**/__pycache__/
+*.yaml
+.pytest_cache
+*.pkl
+.vscode
