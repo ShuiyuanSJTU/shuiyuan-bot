@@ -50,7 +50,7 @@ class BotInteractionReport(BaseBotReportAction):
                 i+1, cls.render_user(usersinfo_by_id[row[0]]), row[2], row[3], row[4]]
         return df.to_markdown(index=False, numalign="center")
 
-    @redis_cache(ex=300, cache_key=BaseBotReportAction.cache_key_for_main_content)
+    @redis_cache(ex=600, cache_key=BaseBotReportAction.cache_key_for_main_content)
     def get_reply_main_content(self, user_id, post_data, opts):
         data = self.get_data(user_id)
         if data is None:

@@ -33,24 +33,24 @@ class BotSummaryReport(BaseBotReportAction):
     # do not cache this function
     def get_reply_main_content(self, user_id, post_data, opts):
         self._lookup_actions()
-        response = []
+        action_response = []
         try:
-            response.append(self.read_report.get_reply_main_content(
+            action_response.append(self.read_report.get_reply_main_content(
                 user_id, post_data, opts))
         except Exception as e:
             pass
 
         try:
-            response.append(self.post_report.get_reply_main_content(
+            action_response.append(self.post_report.get_reply_main_content(
                 user_id, post_data, opts))
         except Exception as e:
             pass
 
         try:
-            response.append(self.interaction_report.get_reply_main_content(
+            action_response.append(self.interaction_report.get_reply_main_content(
                 user_id, post_data, opts))
         except Exception as e:
             pass
 
-        raw = "\n\n".join(response)
+        raw = "\n\n".join(action_response)
         return raw

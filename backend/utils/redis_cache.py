@@ -3,6 +3,7 @@ from typing import Callable, Optional, Union
 from functools import wraps
 from ..bot_config import config as Config
 import logging
+import json
 
 
 class RedisClient:
@@ -51,14 +52,18 @@ def redis_cache(cache_key: Optional[Union[str, Callable]] = None, ex: int = 3600
             cache = _redis_client.get(_cache_key)
 
             if cache is not None:
-                return cache
+                return json.loads(cache.decode())
             else:
                 try:
                     res = f(*args, **kwargs)
                 except Exception:
                     raise
                 if _cache_key is not None:
-                    _redis_client.set(_cache_key, res, ex=ex)
+                    try:
+                        _redis_client.set(_cache_key, json.dumps(res), ex=ex)
+                    except Exception as e:
+                        logging.warning(
+                            f"Failed to set cache for key {_cache_key}: {str(e)}")
             return res
         return wrapper
     return decorator

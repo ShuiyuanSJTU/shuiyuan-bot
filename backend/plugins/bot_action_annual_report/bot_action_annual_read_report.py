@@ -80,7 +80,7 @@ class BotReadReport(BaseBotReportAction):
                 row[0], topicinfo_by_id[row[0]]['title']), cls.convert_milliseconds_to_readable_time(row[1])]
         return df.to_markdown(index=False, numalign="center", stralign="center")
 
-    @redis_cache(ex=300, cache_key=BaseBotReportAction.cache_key_for_main_content)
+    @redis_cache(ex=600, cache_key=BaseBotReportAction.cache_key_for_main_content)
     def get_reply_main_content(self, user_id, post_data, opts):
         # posts_read, time_read, days_visited, posts_read_percentile, time_read_percentile, days_visited_percentile
         visit_data = self.get_visit_data(user_id)

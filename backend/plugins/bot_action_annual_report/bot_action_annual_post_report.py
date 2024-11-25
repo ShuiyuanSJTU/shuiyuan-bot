@@ -215,7 +215,7 @@ class BotPostReport(BaseBotReportAction):
 
         return raw
 
-    @redis_cache(ex=300, cache_key=BaseBotReportAction.cache_key_for_main_content)
+    @redis_cache(ex=600, cache_key=BaseBotReportAction.cache_key_for_main_content)
     def get_reply_main_content(self, user_id: int, post: Post, opts: ReportOptions):
         raw = ''
 
