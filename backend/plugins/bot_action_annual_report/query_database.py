@@ -1,14 +1,7 @@
 from ...discourse_api import BotAPI
 from fluent_discourse import DiscourseError
 import json
-# import redis
-# import threading
-
-# from ...utils.redis_cache import redis_cache
-
-# redis_client = redis.Redis(host='localhost', port=6379, db=0)
-# lock = threading.Semaphore(2)
-
+from functools import wraps
 
 def format_params(params):
     if params is None:
@@ -22,34 +15,6 @@ def format_params(params):
             else:
                 params[k] = str(v)
         return params
-
-# def query_database(api: BotAPI, query_id: int, params = None, cache_key = None, ex = 3600, query_group = "bot"):
-#     if cache_key is not None:
-#         cache = redis_client.get(cache_key)
-#     else:
-#         cache = None
-
-#     if cache is not None:
-#         data = json.loads(cache)
-#         data['duration'] = -1
-#         return data
-#     else:
-#         acquired = lock.acquire(timeout=20)
-#         if acquired:
-#             try:
-#                 query = format_params(params)
-#                 res = api.client.g[query_group].reports[query_id].run.json.post({"params":json.dumps(query)})
-#                 if cache_key is not None:
-#                     redis_client.set(cache_key, json.dumps(res), ex=ex)
-#             except Exception as e:
-#                 raise
-#             finally:
-#                 lock.release()
-#         else:
-#             raise TimeoutError("Cannot acquire lock")
-#         return res
-
-
 def query_database(api: BotAPI, query_id: int, params=None, query_group="bot"):
     query = format_params(params)
     res = api.client.g[query_group].reports[query_id].run.json.post(
@@ -97,3 +62,23 @@ def query_database_paged(api: BotAPI, query_id: int, params=None, query_group="b
         retry_times_left = 3
         current_page += 1
     return result
+
+def retry_when_timeout(retry_times=3):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retry_times_left = retry_times
+            while retry_times_left > 0:
+                try:
+                    return func(*args, **kwargs)
+                except DiscourseError as e:
+                    if "statement timeout" in e.args[0]:
+                        retry_times_left -= 1
+                        if retry_times_left == 0:
+                            raise DiscourseError(
+                                f"Query timeout, max retry times reached, args: {args}, kwargs: {kwargs}")
+                    else:
+                        raise
+        return wrapper
+    return decorator
+    

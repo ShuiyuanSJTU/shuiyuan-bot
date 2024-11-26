@@ -7,7 +7,7 @@ from ...bot_action import on, ActionResult
 from ...model.post import Post
 
 from .base_bot_report_action import BaseBotReportAction
-from .query_database import query_database
+from .query_database import query_database, retry_when_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -16,19 +16,17 @@ class BotInteractionReport(BaseBotReportAction):
     action_name = "BotInteractionReport"
     trigger_keyword = "我的2024互动报告"
 
-    def get_data(self, user_id):
-        try:
-            # from other user
-            res_from = query_database(self.api, self.config.interaction_from_query_id, {
-                                      "target_user_id": user_id}, self.config.query_group)
-            # to other user
-            res_to = query_database(self.api, self.config.interaction_to_query_id, {
-                                    "from_user_id": user_id}, self.config.query_group)
-        except Exception as e:
-            logger.error(e)
-            raise e
-        else:
-            return res_from, res_to
+    @retry_when_timeout()
+    def get_data_from(self, user_id):
+        # from other user
+        return query_database(self.api, self.config.interaction_from_query_id, {
+                                    "target_user_id": user_id}, self.config.query_group)
+
+    @retry_when_timeout()
+    def get_data_to(self, user_id):
+        # to other user
+        return query_database(self.api, self.config.interaction_to_query_id, {
+                                "from_user_id": user_id}, self.config.query_group)
 
     @classmethod
     def render_user(cls, user_info):
@@ -50,18 +48,29 @@ class BotInteractionReport(BaseBotReportAction):
                 i+1, cls.render_user(usersinfo_by_id[row[0]]), row[2], row[3], row[4]]
         return df.to_markdown(index=False, numalign="center")
 
-    @redis_cache(ex=600, cache_key=BaseBotReportAction.cache_key_for_main_content)
+    @redis_cache(ex=600, cache_key=lambda self, user_id: f"{self.action_name}_from_{user_id}")
+    def get_table_from(self, user_id):
+        return self.render_data(self.get_data_from(user_id))
+    
+    @redis_cache(ex=600, cache_key=lambda self, user_id: f"{self.action_name}_to_{user_id}")
+    def get_table_to(self, user_id):
+        return self.render_data(self.get_data_to(user_id))
+
     def get_reply_main_content(self, user_id, post_data, opts):
-        data = self.get_data(user_id)
-        if data is None:
-            return "出错了，请稍后重试"
+        resopnse = []
 
-        table_from = self.render_data(data[0])
-        table_to = self.render_data(data[1])
+        try:
+            table_from = self.get_table_from(user_id)
+            resopnse.append("### 这是2024年与你互动最多的用户，快和他们打个招呼吧！")
+            resopnse.append(table_from)
+        except Exception as e:
+            logger.error(e)
 
-        raw = "### 这是2024年与你互动最多的用户，快和他们打个招呼吧！\n\n"
-        raw += table_from
-        raw += "\n\n### 2024年你与这些用户互动最多，还记得你们之间发生了什么有趣的事情吗？\n\n"
-        raw += table_to
-        raw += f"\n\n [size=0]{user_id},{data[0]['duration']},{data[1]['duration']}[/size]"
-        return raw
+        try:
+            table_to = self.get_table_to(user_id)
+            resopnse.append("### 2024年你与这些用户互动最多，还记得你们之间发生了什么有趣的事情吗？")
+            resopnse.append(table_to)
+        except Exception as e:
+            logger.error(e)
+        
+        return "\n\n".join(resopnse)
