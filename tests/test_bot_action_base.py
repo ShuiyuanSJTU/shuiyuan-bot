@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from backend.model.post import Post
-
+import inspect
 
 @pytest.fixture
 def mock_bot_action_class(patch_bot_config):
@@ -36,7 +36,8 @@ def test_bot_action_initialization(patch_bot_config, mock_bot_manager, mock_bot_
     assert action.enabled is True
     assert action.api == mock_bot_manager.default_bot_client
     assert "post_created" in action._events_listener
-    assert isinstance(action.handle_post_created, BotActionEventWrapper)
+    assert isinstance(type(action).__dict__["handle_post_created"], BotActionEventWrapper)
+    assert inspect.ismethod(action.handle_post_created)
 
 
 def test_bot_action_event_registration_seperate_classes(patch_bot_config, mock_config, mock_bot_action_class):
@@ -54,8 +55,10 @@ def test_bot_action_event_registration_seperate_classes(patch_bot_config, mock_c
     assert "post_created" in action1._events_listener
     assert "post_created" in action2._events_listener
 
-    assert action1._events_listener["post_created"] is action1.handle_post_created.func
-    assert action2._events_listener["post_created"] is action2.handle_post_created.func
+    # We should test == instead of is, because every time we try to get the attribute,
+    # the descriptor will return a new instance of bound method.
+    assert action1._events_listener["post_created"] == action1.handle_post_created
+    assert action2._events_listener["post_created"] == action2.handle_post_created
 
     assert not action1._events_listener["post_created"] is action2._events_listener["post_created"]
 
@@ -65,8 +68,8 @@ def test_bot_action_can_trigger_event(patch_bot_config, mock_bot_manager, mock_b
     action._events_listener["post_created"] = MagicMock()
     post = MagicMock()
     action.trigger("post_created", post)
-    action._events_listener["post_created"].assert_called_once_with(
-        action, post)
+    action._events_listener["post_created"]\
+        .assert_called_once_with(post)
 
 
 def test_bot_action_trigger_event_not_registered(patch_bot_config, mock_bot_manager, mock_bot_action_class):

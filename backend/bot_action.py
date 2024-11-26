@@ -47,14 +47,14 @@ class BotAction:
 
     def _register_events_listener(self):
         self._events_listener: dict[str, callable] = {}
-        for attr in dir(self):
+        for attr, obj in type(self).__dict__.items():
             if not attr.startswith("__"):
-                if isinstance(getattr(self, attr), BotActionEventWrapper):
-                    event = getattr(self, attr).event
+                if isinstance(obj, BotActionEventWrapper):
+                    event = obj.event
                     if event in self._events_listener:
                         logger.warning(
                             f"Event {event} already has a listener, it will be replaced.")
-                    self._events_listener[event] = getattr(self, attr).func
+                    self._events_listener[event] = getattr(self, attr)
         if len(self._events_listener) == 0:
             logger.warning(
                 f"Action {self.action_name} does not have any event listener.")
@@ -65,39 +65,28 @@ class BotAction:
     def on_post_created(self, post: Post):
         raise NotImplementedError()
 
-    # @classmethod
-    # def on(cls, event: str):
-    #     def decorator(f):
-    #         if event in cls._events_listener:
-    #             logger.warning(f"Event {event} already has a listener, it will be replaced.")
-    #         cls._events_listener[event] = f
-    #         return f
-    #     return decorator
-
     def trigger(self, event: str, *args, **kwargs):
         if event in self._events_listener:
-            return self._events_listener[event](self, *args, **kwargs)
+            return self._events_listener[event](*args, **kwargs)
         return None
 
 
 def on(event: str):
-    return BotActionEventWrapper(event)
+    def wrapper(func: callable):
+        return BotActionEventWrapper(event, func)
+    return wrapper
 
 
 class BotActionEventWrapper:
-    def __init__(self, event: str):
+    def __init__(self, event: str, func: callable):
         self.event = event
+        self.func = func
 
-    def __call__(self, func: callable):
-        self._func = func
-        return self
-
-    @property
-    def func(self):
-        if isinstance(self._func, BotActionEventWrapper):
-            return self._func.func
-        else:
-            return self._func
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+    
+    def __get__(self, instance, owner):
+        return self.func.__get__(instance, owner)
 
 
 def register_bot_action(action: Type[BotAction]):
