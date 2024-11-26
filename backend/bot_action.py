@@ -51,11 +51,11 @@ class BotAction:
             if not attr.startswith("__"):
                 obj = getattr(self, attr)
                 if isinstance(obj, BotActionEventHandler):
-                    event = obj.event
-                    if event in self._events_listener:
-                        logger.warning(
-                            f"Event {event} already has a listener, it will be replaced.")
-                    self._events_listener[event] = obj
+                    for event in obj.events:
+                        if event in self._events_listener:
+                            logger.warning(
+                                f"Event {event} already has a listener, it will be replaced.")
+                        self._events_listener[event] = obj
         if len(self._events_listener) == 0:
             logger.warning(
                 f"Action {self.action_name} does not have any event listener.")
@@ -73,29 +73,34 @@ class BotAction:
 
 def on(event: str):
     def wrapper(func: callable):
-        return BotActionEventDescriptor(event, func)
+        if isinstance(func, BotActionEventDescriptor):
+            return BotActionEventDescriptor(func.events + (event,), func.func)
+        else:
+            return BotActionEventDescriptor((event,), func)
     return wrapper
 
 class BotActionEventDescriptor:
     def __get__(self, instance, owner):
-        return BotActionEventHandler(instance, self.event, self.func)
+        return BotActionEventHandler(instance, self.events, self.func)
 
-    def __init__(self, event: str, func: callable):
-        self.event = event
+    def __init__(self, event: tuple[str], func: callable):
+        self.events = event
         self.func = func
 
 class BotActionEventHandler:
-    def __init__(self, action: BotAction, event: str, func: callable):
+    def __init__(self, action: BotAction, events: tuple[str], func: callable):
         self.action = action
-        self.event = event
+        self.events = events
         self.func = func
 
     def __call__(self, *args, **kwargs):
         return self.func(self.action, *args, **kwargs)
 
     def __eq__(self, other):
-        return self.event == other.event and\
+        if isinstance(other, BotActionEventHandler):
+            return set(self.events) == set(other.events) and\
               self.func is other.func and self.action is other.action
+        return False
 
 
 def register_bot_action(action: Type[BotAction]):
