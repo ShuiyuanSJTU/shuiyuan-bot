@@ -30,8 +30,8 @@ l AS (
     ON posts.topic_id = topics.id
     INNER JOIN categories
     ON categories.id = topics.category_id
-    WHERE post_actions.created_at BETWEEN TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00 Asia/Shanghai' 
-    AND TIMESTAMP WITH TIME ZONE '2024-01-01 00:00:00 Asia/Shanghai'
+    WHERE post_actions.created_at BETWEEN TIMESTAMP WITH TIME ZONE '2024-01-01 00:00:00 Asia/Shanghai' 
+    AND TIMESTAMP WITH TIME ZONE '2025-01-01 00:00:00 Asia/Shanghai'
     AND post_actions.deleted_at is NULL
     AND posts.deleted_at is NULL
     AND posts.user_id = :target_user_id
@@ -47,8 +47,8 @@ p AS (
     ON posts.topic_id = topics.id
     INNER JOIN categories
     ON categories.id = topics.category_id
-    WHERE posts.created_at BETWEEN TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00 Asia/Shanghai' 
-    AND TIMESTAMP WITH TIME ZONE '2024-01-01 00:00:00 Asia/Shanghai' 
+    WHERE posts.created_at BETWEEN TIMESTAMP WITH TIME ZONE '2024-01-01 00:00:00 Asia/Shanghai' 
+    AND TIMESTAMP WITH TIME ZONE '2025-01-01 00:00:00 Asia/Shanghai' 
     AND posts.deleted_at is NULL
     AND reply_to_user_id = :target_user_id
     AND topics.archetype = 'regular'
