@@ -52,9 +52,9 @@ def test_redis_cache_decorator():
     result = test_function(5)
     assert result == 10
 
-    client.set.assert_called_once_with("test_key", 10, ex=60)
+    client.set.assert_called_once_with("test_key", '10', ex=60)
 
-    client.get = MagicMock(return_value=20)
+    client.get = MagicMock(return_value=b'20')
     result = test_function(5)
     assert result == 20
 
@@ -73,9 +73,9 @@ def test_redis_cache_decorator_with_callable_key():
     result = test_function(5)
     assert result == 10
 
-    client.set.assert_called_once_with("key_5", 10, ex=60)
+    client.set.assert_called_once_with("key_5", '10', ex=60)
 
-    client.get = MagicMock(return_value=20)
+    client.get = MagicMock(return_value=b'20')
     result = test_function(5)
     assert result == 20
 

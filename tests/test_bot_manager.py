@@ -60,7 +60,7 @@ def test_trigger_event_exception_handling(patch_bot_config, test_data, mock_acti
     with patch('backend.bot.logging.error') as mock_logging_error:
         BotManager.trigger_event('post_created', test_data)
         mock_logging_error.assert_called_once_with(
-            "Error when triggering event post_created for action test_action: Test Exception")
+            "Error when triggering event post_created for action test_action: Test Exception", exc_info=mock_action.trigger.side_effect)
 
 
 def test_limited_mode(patch_bot_config, test_data, mock_activated_actions):
