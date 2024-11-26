@@ -30,17 +30,16 @@ def mock_bot_manager():
         yield mock_bot_manager
 
 
-def test_bot_action_initialization(patch_bot_config, mock_bot_manager, mock_bot_action_class):
-    from backend.bot_action import BotActionEventWrapper
+def test_initialization(patch_bot_config, mock_bot_manager, mock_bot_action_class):
+    from backend.bot_action import BotActionEventHandler
     action = mock_bot_action_class()
     assert action.enabled is True
     assert action.api == mock_bot_manager.default_bot_client
     assert "post_created" in action._events_listener
-    assert isinstance(type(action).__dict__["handle_post_created"], BotActionEventWrapper)
-    assert inspect.ismethod(action.handle_post_created)
+    assert isinstance(action.handle_post_created, BotActionEventHandler)
+    assert action._events_listener["post_created"] == action.handle_post_created
 
-
-def test_bot_action_event_registration_seperate_classes(patch_bot_config, mock_config, mock_bot_action_class):
+def test_event_registration_seperate_classes(patch_bot_config, mock_config, mock_bot_action_class):
     from backend.bot_action import BotAction, on
 
     class TestBotAction2(BotAction):
@@ -63,7 +62,7 @@ def test_bot_action_event_registration_seperate_classes(patch_bot_config, mock_c
     assert not action1._events_listener["post_created"] is action2._events_listener["post_created"]
 
 
-def test_bot_action_can_trigger_event(patch_bot_config, mock_bot_manager, mock_bot_action_class):
+def test_can_trigger_event(patch_bot_config, mock_bot_manager, mock_bot_action_class):
     action = mock_bot_action_class()
     action._events_listener["post_created"] = MagicMock()
     post = MagicMock()
@@ -72,24 +71,60 @@ def test_bot_action_can_trigger_event(patch_bot_config, mock_bot_manager, mock_b
         .assert_called_once_with(post)
 
 
-def test_bot_action_trigger_event_not_registered(patch_bot_config, mock_bot_manager, mock_bot_action_class):
+def test_trigger_event_not_registered(patch_bot_config, mock_bot_manager, mock_bot_action_class):
     action = mock_bot_action_class()
     post = MagicMock()
     # do not raise exception
     action.trigger("_event_not_registered", post)
 
 
-def test_bot_action_warning_when_no_event_listener(patch_bot_config, mock_bot_manager, mock_bot_action_class, caplog):
+def test_warn_when_no_event_listener(patch_bot_config, mock_bot_manager, mock_bot_action_class, caplog):
     del mock_bot_action_class.handle_post_created
     action = mock_bot_action_class()
     assert len(action._events_listener) == 0
     assert "Action TestBotAction does not have any event listener." in caplog.text
 
 
-def test_bot_action_warning_when_same_action_registered_twice(patch_bot_config, mock_bot_manager, mock_bot_action_class, caplog):
+def test_warn_when_same_action_registered_twice(patch_bot_config, mock_bot_manager, mock_bot_action_class, caplog):
     from backend.bot_action import register_bot_action
     action1 = mock_bot_action_class
     action2 = mock_bot_action_class
     register_bot_action(action1)
     register_bot_action(action2)
     assert "Action TestBotAction is already registered." in caplog.text
+
+
+def test_work_with_inherited_class(patch_bot_config, mock_bot_manager, mock_bot_action_class):
+    patch_bot_config.action_custom_config["TestBotAction2"] = {"enabled": True}
+    from backend.bot_action import BotActionEventHandler
+
+    class TestBotAction2(mock_bot_action_class):
+        action_name = "TestBotAction2"
+
+    action = TestBotAction2()
+    assert action.enabled is True
+    assert action.api == mock_bot_manager.default_bot_client
+    assert "post_created" in action._events_listener
+    assert isinstance(action.handle_post_created, BotActionEventHandler)
+    assert action._events_listener["post_created"] == action.handle_post_created
+    assert action.handle_post_created.func is mock_bot_action_class.__dict__["handle_post_created"].func
+
+
+def test_work_with_inherited_class_override_method(patch_bot_config, mock_bot_manager, mock_bot_action_class):
+    patch_bot_config.action_custom_config["TestBotAction2"] = {"enabled": True}
+    from backend.bot_action import BotActionEventHandler, on
+
+    class TestBotAction2(mock_bot_action_class):
+        action_name = "TestBotAction2"
+        @on("post_created")
+        def handle_post_created(self, post: Post):
+            return f"Handled post with id {post.id} in TestBotAction2"
+    
+    action = TestBotAction2()
+    assert action.enabled is True
+    assert action.api == mock_bot_manager.default_bot_client
+    assert "post_created" in action._events_listener
+    assert isinstance(action.handle_post_created, BotActionEventHandler)
+    assert action._events_listener["post_created"] == action.handle_post_created
+    assert not action.handle_post_created.func is mock_bot_action_class.__dict__["handle_post_created"].func
+    assert action.handle_post_created.func is TestBotAction2.__dict__["handle_post_created"].func

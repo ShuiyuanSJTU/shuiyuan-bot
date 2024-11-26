@@ -27,7 +27,7 @@ def patch_bot_config(mock_config):
     mock_bot_config = create_autospec('backend.bot_config')
     mock_bot_config.config = mock_config
     with patch.dict('sys.modules', {'backend.bot_config': mock_bot_config}):
-        yield mock_bot_config
+        yield mock_config
 
 
 @pytest.fixture

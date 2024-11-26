@@ -47,14 +47,15 @@ class BotAction:
 
     def _register_events_listener(self):
         self._events_listener: dict[str, callable] = {}
-        for attr, obj in type(self).__dict__.items():
+        for attr in dir(self):
             if not attr.startswith("__"):
-                if isinstance(obj, BotActionEventWrapper):
+                obj = getattr(self, attr)
+                if isinstance(obj, BotActionEventHandler):
                     event = obj.event
                     if event in self._events_listener:
                         logger.warning(
                             f"Event {event} already has a listener, it will be replaced.")
-                    self._events_listener[event] = getattr(self, attr)
+                    self._events_listener[event] = obj
         if len(self._events_listener) == 0:
             logger.warning(
                 f"Action {self.action_name} does not have any event listener.")
@@ -70,23 +71,31 @@ class BotAction:
             return self._events_listener[event](*args, **kwargs)
         return None
 
-
 def on(event: str):
     def wrapper(func: callable):
-        return BotActionEventWrapper(event, func)
+        return BotActionEventDescriptor(event, func)
     return wrapper
 
+class BotActionEventDescriptor:
+    def __get__(self, instance, owner):
+        return BotActionEventHandler(instance, self.event, self.func)
 
-class BotActionEventWrapper:
     def __init__(self, event: str, func: callable):
         self.event = event
         self.func = func
 
+class BotActionEventHandler:
+    def __init__(self, action: BotAction, event: str, func: callable):
+        self.action = action
+        self.event = event
+        self.func = func
+
     def __call__(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
-    
-    def __get__(self, instance, owner):
-        return self.func.__get__(instance, owner)
+        return self.func(self.action, *args, **kwargs)
+
+    def __eq__(self, other):
+        return self.event == other.event and\
+              self.func is other.func and self.action is other.action
 
 
 def register_bot_action(action: Type[BotAction]):

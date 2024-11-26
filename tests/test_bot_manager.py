@@ -68,8 +68,8 @@ def test_limited_mode(patch_bot_config, test_data, mock_activated_actions):
     mock_action = MagicMock()
     mock_action.enabled = True
     mock_activated_actions['test_action'] = mock_action
-    patch_bot_config.config.limited_mode = True
-    patch_bot_config.config.limited_usernames = ['test_user']
+    patch_bot_config.limited_mode = True
+    patch_bot_config.limited_usernames = ['test_user']
 
     test_data['post']['username'] = 'test_user'
     BotManager.trigger_event('post_created', test_data)
