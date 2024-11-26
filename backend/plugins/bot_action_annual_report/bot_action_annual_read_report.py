@@ -120,6 +120,4 @@ class BotReadReport(BaseBotReportAction):
 
         raw += table
 
-        raw += f"\n\n [size=0]{user_id},{visit_data['posts_read']},{visit_data['time_read']},{visit_data['days_visited']},{topic_read_data['duration']}[/size]"
-
         return raw

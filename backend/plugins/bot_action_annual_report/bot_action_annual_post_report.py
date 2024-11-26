@@ -230,5 +230,4 @@ class BotPostReport(BaseBotReportAction):
             user_post_day_count, user_post_hour_count, user_table_row)
         raw += self.render_post_tag_activity(user_id)
 
-        raw += f"\n[size=0]{user_id}[/size]"
         return raw
