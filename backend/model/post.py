@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from .user import ReplyToUser
+from .user import BasicUser
 from pydantic import BaseModel
 
 
@@ -26,7 +26,7 @@ class Post(BaseModel):
     flair_group_id: Optional[int] = None
     version: int
     user_title: Optional[str] = None
-    reply_to_user: Optional[ReplyToUser] = None
+    reply_to_user: Optional[BasicUser] = None
     raw: str
     moderator: bool
     admin: bool

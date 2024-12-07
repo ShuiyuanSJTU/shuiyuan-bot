@@ -4,7 +4,8 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class ReplyToUser(BaseModel):
+class BasicUser(BaseModel):
+    id: Optional[int] = None
     username: str
-    name: str
-    avatar_template: str
+    name: Optional[str] = None
+    avatar_template: Optional[str] = None

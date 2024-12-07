@@ -3,7 +3,7 @@ import json
 import os.path
 
 from backend.model.post import Post, PostWebhook, PostAPI
-from backend.model.user import ReplyToUser
+from backend.model.user import BasicUser
 
 
 @pytest.fixture(scope="module")
@@ -21,10 +21,10 @@ def test_init_webhook_without_reply_to_user(test_data):
 def test_init_webhook_with_reply_to_user(test_data):
     post = PostWebhook(**test_data["webhook_with_reply_to"])
     assert post.id == 3859
-    assert isinstance(post.reply_to_user, ReplyToUser)
+    assert isinstance(post.reply_to_user, BasicUser)
 
 
 def test_init_api(test_data):
     post = PostAPI(**test_data["api"])
     assert post.id == 994
-    assert isinstance(post.reply_to_user, ReplyToUser)
+    assert isinstance(post.reply_to_user, BasicUser)
