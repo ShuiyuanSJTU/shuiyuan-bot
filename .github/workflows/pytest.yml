@@ -27,4 +27,4 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest
+        pytest --cov=backend --cov-config=.coveragerc --cov-report term tests/
