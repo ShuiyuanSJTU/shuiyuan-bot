@@ -21,13 +21,13 @@ class BotAccountManager:
             if len(default_bot_clients) > 1:
                 logger.warning(
                     "More than one bot account is marked as default, the first one will be used.")
-                self._default_bot_client = default_bot_clients[0]
+                self._default_bot_client = self.bot_clients[Config.bot_accounts.index(default_bot_clients[0])]
             elif len(default_bot_clients) == 0:
                 logger.warning(
                     "No bot account is marked as default, the first one will be used.")
                 self._default_bot_client = self.bot_clients[0]
             else:
-                self._default_bot_client = default_bot_clients[0]
+                self._default_bot_client = self.bot_clients[Config.bot_accounts.index(default_bot_clients[0])]
 
     @property
     def default_bot_client(self):
