@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
-from .user import BasicUser
 from pydantic import BaseModel
 
+from .user import BasicUser
 
 class Post(BaseModel):
     id: int

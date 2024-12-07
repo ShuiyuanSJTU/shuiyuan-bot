@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
+
 from .user import BasicUser
 
 class Topic(BaseModel):

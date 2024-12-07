@@ -11,7 +11,6 @@ from .query_database import query_database, retry_when_timeout
 
 logger = logging.getLogger(__name__)
 
-
 class BotInteractionReport(BaseBotReportAction):
     action_name = "BotInteractionReport"
     trigger_keyword = "我的2024互动报告"

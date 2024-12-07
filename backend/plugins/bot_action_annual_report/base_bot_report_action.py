@@ -1,7 +1,7 @@
-from ...bot_action import BotAction, ActionResult, on
-from ...model.post import Post
 from pydantic import BaseModel
 
+from ...bot_action import BotAction, ActionResult, on
+from ...model.post import Post
 
 class ReportOptions(BaseModel):
     override_user_id: int = -1

@@ -3,12 +3,6 @@ import sys
 import importlib
 from unittest.mock import patch, MagicMock, create_autospec
 
-# def reload_bot_account_manager():
-#     if 'backend.bot_account_manager' in sys.modules:
-#         del sys.modules['backend.bot_account_manager']
-#     return importlib.import_module('backend.bot_account_manager')
-
-
 @pytest.fixture
 def mock_config():
     mock_config = MagicMock()
