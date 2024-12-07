@@ -9,7 +9,7 @@ from scipy.ndimage import gaussian_filter1d
 from matplotlib.colors import LinearSegmentedColormap
 from io import BytesIO
 
-current_year = 2023
+CURRENT_YEAR = 2024
 
 
 def get_most_active_hour_period(hour_count, window_size=6):
@@ -29,7 +29,7 @@ def get_most_active_day(day_count):
 
 
 def get_month_post_count(day_count):
-    month_first_days = [(datetime(current_year, month, 1).timetuple(
+    month_first_days = [(datetime(CURRENT_YEAR, month, 1).timetuple(
     ).tm_yday-1)/7-0.5 for month in range(1, 13)]
     month_posts = np.zeros(12)
     month_avg_posts = np.zeros(12)
@@ -97,7 +97,7 @@ def plot_post_activity_hour(post_hour):
 
 
 def plot_post_activity_year(post_day):
-    offset = datetime(current_year, 1, 1).weekday()
+    offset = datetime(CURRENT_YEAR, 1, 1).weekday()
     activity = np.zeros(7*53)
     activity[offset:offset + len(post_day)] = post_day
     activity_matrix = np.reshape(activity, (-1, 7)).T
@@ -113,7 +113,7 @@ def plot_post_activity_year(post_day):
 
     month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May',
                     'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    month_first_days = [(datetime(current_year, month, 1).timetuple(
+    month_first_days = [(datetime(CURRENT_YEAR, month, 1).timetuple(
     ).tm_yday+offset-1)/7-0.5 for month in range(1, 13)]
 
     g.ax_joint.set_xticks(month_first_days)
