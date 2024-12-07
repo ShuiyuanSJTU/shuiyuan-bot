@@ -24,6 +24,8 @@ class BotForward(BotAction):
 
     @on("post_created")
     def on_post_created(self, post: Post):
+        if post.post_type != 1:
+            return
         if post.topic_id in self.watching_topic_ids:
             for task in self.forward_tasks:
                 if task.source_topic_id == post.topic_id:
