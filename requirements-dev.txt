@@ -1,17 +1,2 @@
-requests
-fluent_discourse == 1.0.1
-redis
-
-# frontend
-eventlet
-flask
-
-# Optional for plugins
-numpy
-pandas
-scipy
-seaborn
-tabulate
-
 # Optional for development
 pytest
