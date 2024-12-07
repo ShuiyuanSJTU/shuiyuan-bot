@@ -12,3 +12,6 @@ pandas
 scipy
 seaborn
 tabulate
+
+# Optional for development
+pytest
