@@ -1,5 +1,4 @@
 import pytest
-import sys
 import importlib
 from unittest.mock import patch, MagicMock, create_autospec
 
@@ -13,24 +12,27 @@ def mock_config():
         MagicMock(id=2, username="bot2", api_key="API_KEY_2",
                   writable=True, default=False)
     ]
-    return mock_config
+    yield mock_config
 
 
-@pytest.fixture
-def mock_bot_api():
-    with patch("backend.bot_account_manager.BotAPI") as mock_bot_api:
-        yield mock_bot_api
+# @pytest.fixture
+# def mock_bot_api():
+#     with patch("backend.bot_account_manager.BotAPI") as mock_bot_api:
+#         yield mock_bot_api
 
 
 @pytest.fixture(autouse=True)
-def auto_patch(patch_bot_config, mock_bot_api):
+def auto_patch(patch_bot_config):
     yield
 
 
 def test_bot_account_manager_initialization():
-    import backend.bot_account_manager as bot_account_manager
-    account_manager = bot_account_manager.account_manager
+    from backend.bot_account_manager import account_manager
+    from backend.discourse_api import BotAPI
     assert len(account_manager.bot_clients) == 2
+    assert type(account_manager.bot_clients[0]) is BotAPI
+    assert type(account_manager.bot_clients[1]) is BotAPI
+    assert type(account_manager.default_bot_client) is BotAPI
     assert account_manager.default_bot_client.username == "bot1"
     assert account_manager.usernames == ["bot1", "bot2"]
 
@@ -44,12 +46,25 @@ def test_get_bot_client():
         account_manager.get_bot_client("nonexistent_bot")
 
 
-def test_no_bot_account_configured():
-    mock_config = MagicMock()
-    mock_bot_config = create_autospec('backend.bot_config')
-    mock_bot_config.config = mock_config
+def test_no_bot_account_configured(mock_config):
     mock_config.bot_accounts = []
-    with patch.dict('sys.modules', {'backend.bot_config': mock_bot_config}):
+    with pytest.raises(ValueError, match="No bot account is configured."):
         import backend.bot_account_manager as bot_account_manager
-        with pytest.raises(ValueError, match="No bot account is configured."):
-            importlib.reload(bot_account_manager)
+
+
+def test_multiple_default_bot_accounts_configured(mock_config):
+    mock_config.bot_accounts[0].default = True
+    mock_config.bot_accounts[1].default = True
+    from backend.bot_account_manager import account_manager
+    from backend.discourse_api import BotAPI
+    assert type(account_manager.default_bot_client) is BotAPI
+    assert account_manager.default_bot_client.username == "bot1"
+
+
+def test_no_default_bot_account_configured(mock_config):
+    mock_config.bot_accounts[0].default = False
+    mock_config.bot_accounts[1].default = False
+    from backend.bot_account_manager import account_manager
+    from backend.discourse_api import BotAPI
+    assert type(account_manager.default_bot_client) is BotAPI
+    assert account_manager.default_bot_client.username == "bot1"
