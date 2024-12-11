@@ -5,3 +5,4 @@
 .vscode
 htmlcov
 .coverage
+*.log
