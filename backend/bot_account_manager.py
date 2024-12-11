@@ -1,6 +1,7 @@
 from .bot_config import config as Config
 from .discourse_api import BotAPI
 import logging
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -9,8 +10,14 @@ class BotAccountManager:
     def __init__(self):
         self.bot_clients: list[BotAPI] = []
         for bot_account in Config.bot_accounts:
-            self.bot_clients.append(BotAPI(base_url=Config.site_url, username=bot_account.username,
-                                    api_key=bot_account.api_key, raise_for_rate_limit=True))
+            self.bot_clients.append(
+                BotAPI(
+                    base_url=Config.site_url,
+                    username=quote(bot_account.username),
+                    api_key=bot_account.api_key,
+                    raise_for_rate_limit=True
+                )
+            )
         if len(self.bot_clients) == 0:
             raise ValueError("No bot account is configured.")
         elif len(self.bot_clients) == 1:
