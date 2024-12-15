@@ -1,11 +1,17 @@
 from fluent_discourse import Discourse, RateLimitError
 import requests
 
-
 class BotAPI:
-    def __init__(self, base_url, username, api_key, raise_for_rate_limit):
+    def __init__(self, base_url: str, username: str, api_key:str, raise_for_rate_limit: bool = True):
+        # Discourse API could not handle non-ascii characters in the username
+        # so we will not send the username in the header if it is not ascii
+        # This works fine when the api is for single user
+        try:
+            encoded_username = username.encode("latin-1")
+        except UnicodeEncodeError:
+            encoded_username = None
         self.client: Discourse = Discourse(
-            base_url=base_url, username=username, api_key=api_key, raise_for_rate_limit=raise_for_rate_limit)
+            base_url=base_url, username=encoded_username, api_key=api_key, raise_for_rate_limit=raise_for_rate_limit)
         self.base_url = base_url
         self.username = username
 

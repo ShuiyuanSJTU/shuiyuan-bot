@@ -1,7 +1,6 @@
 from .bot_config import config as Config
 from .discourse_api import BotAPI
 import logging
-from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +12,7 @@ class BotAccountManager:
             self.bot_clients.append(
                 BotAPI(
                     base_url=Config.site_url,
-                    username=quote(bot_account.username),
+                    username=bot_account.username,
                     api_key=bot_account.api_key,
                     raise_for_rate_limit=True
                 )
