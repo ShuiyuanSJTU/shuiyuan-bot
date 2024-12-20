@@ -19,7 +19,7 @@ def load_plugins():
                 module_content = {name: getattr(module, name) for name in dir(
                     module) if not name.startswith('_')}
             for obj in module_content.values():
-                if issubclass(obj, BotAction):
+                if isinstance(obj, type) and issubclass(obj, BotAction):
                     if obj.action_name != "BotActionBase":
                         BotManager.register_bot_action(obj)
                     elif not obj is BotAction:

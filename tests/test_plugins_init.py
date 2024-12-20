@@ -37,6 +37,7 @@ def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib):
     mock_pkgutil.return_value = [
         (None, 'module1', True),
         (None, 'module2', True),
+        (None, 'module3', True),
         (None, '_private_module', True)
     ]
 
@@ -51,9 +52,14 @@ def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib):
     mock_module2.BotAction2 = type('BotAction2', (BotAction,), {
                                    'action_name': 'Action2'})
 
+    mock_module3 = MagicMock()
+    mock_module3.BotAction3 = type('BotAction3', (BotAction,), {
+                                   'action_name': 'Action3'})
+
     mock_importlib.side_effect = lambda name: {
         'backend.plugins.module1': mock_module1,
-        'backend.plugins.module2': mock_module2
+        'backend.plugins.module2': mock_module2,
+        'backend.plugins.module3': mock_module3
     }[name]
 
     # Call the function to test
@@ -63,5 +69,7 @@ def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib):
     mock_pkgutil.assert_called_once()
     mock_importlib.assert_any_call('backend.plugins.module1')
     mock_importlib.assert_any_call('backend.plugins.module2')
+    mock_importlib.assert_any_call('backend.plugins.module3')
     BotManager.register_bot_action.assert_any_call(mock_module1.BotAction1)
     BotManager.register_bot_action.assert_any_call(mock_module2.BotAction2)
+    BotManager.register_bot_action.assert_any_call(mock_module3.BotAction3)
