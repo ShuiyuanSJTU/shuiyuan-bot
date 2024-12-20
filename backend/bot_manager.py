@@ -1,19 +1,24 @@
-import re
 import logging
-from typing import Optional, List, Type
+from typing import Type
 from .utils.singleton import Singleton
 from .bot_action import BotAction, ActionResult
-from .discourse_api import BotAPI
 from .model.post import Post
 from .bot_config import config as Config
 
 logger = logging.getLogger(__name__)
+
+try:
+    from apscheduler.schedulers.base import BaseScheduler
+except ImportError:
+    pass
 
 @Singleton
 class BotManager:
     def __init__(self):
         self.registered_actions: dict[str, BotAction] = {}
         self.activated_actions: dict[str, BotAction] = {}
+
+        self._should_warn_unregistered_schedule = False
 
     def register_bot_action(self, action_cls: Type[BotAction]):
         if action_cls.action_name in self.registered_actions:
@@ -24,9 +29,24 @@ class BotManager:
             self.registered_actions[action_cls.action_name] = action_inst
             if action_inst.enabled:
                 self.activated_actions[action_cls.action_name] = action_inst
+                if len(action_inst._schedules) > 0:
+                    self._should_warn_unregistered_schedule = True
 
+    def register_jobs_to_scheduler(self, scheduler: BaseScheduler):
+        for action in self.activated_actions.values():
+            for schedule, handler in action._schedules:
+                scheduler.add_job(
+                    handler, *schedule.args, **schedule.kwargs)
+                logger.debug(f"Schedule job {handler} with schedule {schedule.args} {schedule.kwargs} is registered.")
+        self._should_warn_unregistered_schedule = False
 
     def trigger_event(self, event: str, data: dict):
+        # if there are schedules that are not registered, warn the user
+        if self._should_warn_unregistered_schedule:
+            logger.warning(
+                "There are schedules that are not registered, please make sure you have registered the scheduler.")
+            self._should_warn_unregistered_schedule = False
+
         args = []
         kwargs = {}
         match event:

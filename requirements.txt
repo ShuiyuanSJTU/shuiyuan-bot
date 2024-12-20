@@ -3,6 +3,7 @@ requests
 fluent_discourse == 1.0.1
 redis
 PyYAML
+apscheduler
 
 # frontend
 eventlet
