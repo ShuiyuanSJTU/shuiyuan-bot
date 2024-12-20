@@ -40,6 +40,7 @@ def mock_config_base():
     ]
     mock_config.action_custom_config = {}
     mock_config.limited_mode = False
+    mock_config.db_url = "sqlite:///:memory:"
     yield mock_config
 
 

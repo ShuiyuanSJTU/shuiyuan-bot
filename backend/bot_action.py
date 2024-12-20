@@ -63,15 +63,21 @@ class BotAction:
     def should_response(self, post: Post):
         return not post_created_by_bot(post) and (post_mention_bot(post, self.api.username) or post_reply_to_bot(post, self.api.username))
 
-    def on_post_created(self, post: Post):
-        raise NotImplementedError()
-
     def trigger(self, event: str, *args, **kwargs):
         if event in self._events_listeners:
             return self._events_listeners[event](*args, **kwargs)
         return None
 
 def scheduled(*args, **kwargs):
+    """
+    Decorator to trigger a method on a schedule.
+
+    Parameters will be passed to the `add_job` method of `apscheduler.schedulers.base.BaseScheduler`.
+
+    This decorator can be used multiple times on the same method, then the method will be triggered on multiple schedules. Schedule will not be registered if the action is disabled.
+
+    No parameters will be passed to the handler when triggered by the scheduler.
+    """
     def wrapper(func: callable):
         descriptor = func if isinstance(func, BotActionEventDescriptor) else BotActionEventDescriptor(func)
         descriptor.append_schedule(ScheduleArgs(args, kwargs))
@@ -79,6 +85,13 @@ def scheduled(*args, **kwargs):
     return wrapper
 
 def on(event: str):
+    """
+    Decorator to bind a method as a handler to an Discourse event.
+
+    This decorator can be used multiple times on the same method, then the method will be triggered on multiple events. Event will not be registered if the action is disabled.
+
+    Parameters passed to the handler depend on the event type, please refer to the Discourse webhook documentation.
+    """
     def wrapper(func: callable):
         descriptor = func if isinstance(func, BotActionEventDescriptor) else BotActionEventDescriptor(func)
         descriptor.append_event(event)

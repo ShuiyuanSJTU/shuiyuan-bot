@@ -34,6 +34,7 @@ class BotConfig(BaseModel):
     server: ServerConfig = ServerConfig()
     bot_accounts: list[BotAccount]
     action_custom_config: dict[str, dict[str, Any]]
+    db_url: str = "sqlite:///db.sqlite"
 
 
 def load_config(file_path: str) -> BotConfig:
@@ -81,7 +82,7 @@ def init(config_file: str = "config.yaml"):
         config = load_config(config_file)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     init("config.yaml")
     print(config)
 else:

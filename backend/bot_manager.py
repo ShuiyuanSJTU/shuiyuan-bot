@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from apscheduler.schedulers.base import BaseScheduler
-except ImportError:
+except ImportError: # pragma: no cover
     pass
 
 @Singleton
