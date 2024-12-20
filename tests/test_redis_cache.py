@@ -37,8 +37,7 @@ def test_redis_client_initialization(mock_config, mock_redis_client):
     mock_redis_client.assert_called_once_with(
         host="localhost", port=6379, db=0)
 
-
-def test_redis_cache_decorator():
+def test_decorator():
     import backend.utils.redis_cache as redis_cache
     client = redis_cache.RedisClient().client
 
@@ -48,18 +47,25 @@ def test_redis_cache_decorator():
 
     client.get = MagicMock(return_value=None)
     client.set = MagicMock()
-
-    result = test_function(5)
-    assert result == 10
-
+    assert test_function(5) == 10
     client.set.assert_called_once_with("test_key", '10', ex=60)
-
     client.get = MagicMock(return_value=b'20')
-    result = test_function(5)
-    assert result == 20
+    assert test_function(5) == 20
 
+def test_default_cache_key():
+    import backend.utils.redis_cache as redis_cache
+    client = redis_cache.RedisClient().client
 
-def test_redis_cache_decorator_with_callable_key():
+    @redis_cache.redis_cache(ex=60)
+    def test_function(x):
+        return x * 2
+
+    client.get = MagicMock(return_value=None)
+    client.set = MagicMock()
+    assert test_function(5) == 10
+    client.set.assert_called_once_with("tests.test_redis_cache.test_function-(5,)-{}", '10', ex=60)
+
+def test_decorator_with_callable_key():
     import backend.utils.redis_cache as redis_cache
     client = redis_cache.RedisClient().client
 
@@ -79,8 +85,7 @@ def test_redis_cache_decorator_with_callable_key():
     result = test_function(5)
     assert result == 20
 
-
-def test_redis_cache_decorator_when_redis_unavailable():
+def test_decorator_when_redis_unavailable():
     with patch("redis.Redis", side_effect=Exception("Connection Error")) as mock_redis:
         import backend.utils.redis_cache as redis_cache
 
@@ -96,3 +101,31 @@ def test_redis_cache_decorator_when_redis_unavailable():
 
         assert redis_cache._redis_available is False
         assert redis_cache._redis_client is None
+
+def test_failed_to_set_cache(caplog):
+    import backend.utils.redis_cache as redis_cache
+    client = redis_cache.RedisClient().client
+
+    @redis_cache.redis_cache(cache_key="test_key", ex=60)
+    def test_function(x):
+        return x * 2
+
+    client.get = MagicMock(return_value=None)
+    client.set = MagicMock(side_effect=Exception("Failed to set cache"))
+    assert test_function(5) == 10
+
+    client.set.assert_called_once_with("test_key", '10', ex=60)
+    assert "Failed to set cache for key test_key" in caplog.text
+
+def test_exception_in_function(caplog):
+    import backend.utils.redis_cache as redis_cache
+    client = redis_cache.RedisClient().client
+
+    @redis_cache.redis_cache(cache_key="test_key", ex=60)
+    def test_function(x):
+        raise RuntimeError("Error in function")
+
+    client.get = MagicMock(return_value=None)
+    client.set = MagicMock()
+    with pytest.raises(RuntimeError) as e:
+        test_function(5)
