@@ -28,15 +28,11 @@ def mock_importlib():
         yield mock_import_module
 
 
-@pytest.fixture
-def mock_register_bot_action():
-    with patch("backend.plugins.register_bot_action") as mock_register:
-        yield mock_register
-
-
-def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib, mock_register_bot_action):
+def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib):
     from backend.plugins import load_plugins
     from backend.bot_action import BotAction
+    from backend.bot_manager import bot_manager as BotManager
+    BotManager.register_bot_action = MagicMock()
     # Mock the return value of iter_modules
     mock_pkgutil.return_value = [
         (None, 'module1', True),
@@ -67,5 +63,5 @@ def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib, mock_regis
     mock_pkgutil.assert_called_once()
     mock_importlib.assert_any_call('backend.plugins.module1')
     mock_importlib.assert_any_call('backend.plugins.module2')
-    mock_register_bot_action.assert_any_call(mock_module1.BotAction1)
-    mock_register_bot_action.assert_any_call(mock_module2.BotAction2)
+    BotManager.register_bot_action.assert_any_call(mock_module1.BotAction1)
+    BotManager.register_bot_action.assert_any_call(mock_module2.BotAction2)

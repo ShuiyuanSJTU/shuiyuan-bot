@@ -8,7 +8,7 @@ from .bot_action_annual_read_report import BotReadReport
 from ...utils.redis_cache import redis_cache
 from ...bot_action import on, ActionResult
 from ...model import Post
-from ...bot_action import activated_actions
+from ...bot_manager import bot_manager as BotManager
 
 
 class BotSummaryReport(BaseBotReportAction):
@@ -24,6 +24,7 @@ class BotSummaryReport(BaseBotReportAction):
 
     def _lookup_actions(self):
         if not self.action_cached:
+            activated_actions = BotManager.activated_actions
             self.interaction_report = activated_actions.get(
                 BotInteractionReport.action_name)
             self.post_report = activated_actions.get(BotPostReport.action_name)

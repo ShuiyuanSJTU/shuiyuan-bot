@@ -14,13 +14,6 @@ def mock_config():
     ]
     yield mock_config
 
-
-# @pytest.fixture
-# def mock_bot_api():
-#     with patch("backend.bot_account_manager.BotAPI") as mock_bot_api:
-#         yield mock_bot_api
-
-
 @pytest.fixture(autouse=True)
 def auto_patch(patch_bot_config):
     yield

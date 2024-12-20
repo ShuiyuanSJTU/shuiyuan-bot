@@ -1,10 +1,11 @@
 from .bot_config import config as Config
 from .discourse_api import BotAPI
+from .utils.singleton import Singleton
 import logging
 
 logger = logging.getLogger(__name__)
 
-
+@Singleton
 class BotAccountManager:
     def __init__(self):
         self.bot_clients: list[BotAPI] = []

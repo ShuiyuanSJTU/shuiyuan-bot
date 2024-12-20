@@ -3,8 +3,8 @@ import pkgutil
 import importlib
 import logging
 
-from ..bot_action import register_bot_action, BotAction
-
+from ..bot_action import BotAction
+from ..bot_manager import bot_manager as BotManager
 
 def load_plugins():
     package_path = os.path.dirname(__file__)
@@ -21,7 +21,7 @@ def load_plugins():
             for obj in module_content.values():
                 if issubclass(obj, BotAction):
                     if obj.action_name != "BotActionBase":
-                        register_bot_action(obj)
+                        BotManager.register_bot_action(obj)
                     elif not obj is BotAction:
                         logging.warning(
                             f"Class {obj} is a subclass of BotAction but does not have a valid action_name, so it is not registered.")
