@@ -109,8 +109,7 @@ class BotAPI:
             'files[]': (file_name, file)
         }
         params = {
-            'type': 'composer',
-            'name': '123.txt'
+            'upload_type': 'composer',
         }
         r = requests.post(url, files=files, headers=headers, params=params)
         if r.status_code == 200:
