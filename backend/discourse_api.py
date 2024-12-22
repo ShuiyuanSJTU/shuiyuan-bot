@@ -46,12 +46,12 @@ class BotAPI:
         kwargs.update(post_data)
         return self.create_post_raw(kwargs)
 
-    def create_topic(self, title, raw, category, tags, **kwargs):
+    def create_topic(self, title, raw, category, tags = None, **kwargs):
         topic_data = {
             "title": title,
             "raw": raw,
             "category": category,
-            "tags": tags,
+            "tags": tags if tags else [],
         }
         kwargs.update(topic_data)
         return self.create_post_raw(kwargs)
