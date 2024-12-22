@@ -11,19 +11,20 @@ def test_post():
     with open(os.path.join(os.path.dirname(__file__), "../data/test_model_data.json")) as f:
         return Post(**(json.load(f)['webhook_with_reply_to']))
 
+@pytest.fixture(autouse=True)
+def auto_patch(bypass_db_init):
+    yield
 
 @pytest.fixture
-def mock_config():
-    mock_config = MagicMock()
-    mock_config.site_url = "http://example.com"
-    mock_config.bot_accounts = [
+def mock_config(mock_config_base):
+    mock_config_base.bot_accounts = [
         MagicMock(id=1, username="bot1", api_key="API_KEY_1",
                   writable=True, default=True),
     ]
-    mock_config.action_custom_config = {
+    mock_config_base.action_custom_config = {
         "BotDice": {"enabled": True}
     }
-    return mock_config
+    return mock_config_base
 
 
 def test_bot_dice_init(patch_bot_config):

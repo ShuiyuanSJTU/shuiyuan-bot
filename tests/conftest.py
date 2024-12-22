@@ -23,6 +23,15 @@ def mock_bot_api():
 
 
 @pytest.fixture
+def bypass_db_init():
+    mock_db = create_autospec('backend.db')
+    mock_db.DBManager = MagicMock()
+    mock_db.db_manager = mock_db.DBManager
+    with patch.dict('sys.modules', {'backend.db': mock_db}):
+        yield mock_config
+
+
+@pytest.fixture
 def patch_bot_config(mock_config):
     mock_bot_config = create_autospec('backend.bot_config')
     mock_bot_config.config = mock_config

@@ -4,16 +4,16 @@ import importlib
 
 
 @pytest.fixture
-def mock_config():
-    mock_config.site_url = "http://example.com"
-    mock_config.bot_accounts = [
+def mock_config(mock_config_base):
+    mock_config_base.site_url = "http://example.com"
+    mock_config_base.bot_accounts = [
         MagicMock(id=1, username="bot1", api_key="API_KEY_1",
                   writable=True, default=True),
         MagicMock(id=2, username="bot2", api_key="API_KEY_2",
                   writable=True, default=False)
     ]
-    mock_config.action_custom_config = {}
-    return mock_config
+    mock_config_base.action_custom_config = {}
+    return mock_config_base
 
 
 @pytest.fixture
@@ -28,10 +28,12 @@ def mock_importlib():
         yield mock_import_module
 
 
-def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib):
+def test_load_plugins(patch_bot_config, bypass_db_init, mock_pkgutil, mock_importlib):
     from backend.plugins import load_plugins
     from backend.bot_action import BotAction
     from backend.bot_manager import bot_manager as BotManager
+    from backend.db import db_manager as DBManager
+    DBManager.init_tables = MagicMock()
     BotManager.register_bot_action = MagicMock()
     # Mock the return value of iter_modules
     mock_pkgutil.return_value = [
@@ -82,3 +84,4 @@ def test_load_plugins(patch_bot_config, mock_pkgutil, mock_importlib):
     BotManager.register_bot_action.assert_any_call(mock_module2.BotAction2)
     BotManager.register_bot_action.assert_any_call(mock_module3.BotAction3)
     assert mock_module4.BotAction4 not in BotManager.register_bot_action.call_args_list
+    DBManager.init_tables.assert_called_once()
