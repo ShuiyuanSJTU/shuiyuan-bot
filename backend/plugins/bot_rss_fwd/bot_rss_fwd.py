@@ -1,10 +1,10 @@
 import time
 import logging
-import feedparser 
+import datetime
+import feedparser
 from feedparser.util import FeedParserDict
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 
@@ -66,6 +66,11 @@ class BotRssFwd(BotAction):
     def save_state(self):
         Storage.set("rss_fwd_time", self.last_fwd_time)
 
+    @staticmethod
+    def feed_time_to_local_timezone(feed_time: time.struct_time) -> time.struct_time:
+        utc_dt = datetime.datetime(*feed_time[:6], tzinfo=datetime.timezone.utc)
+        return utc_dt.astimezone().timetuple()
+
     @classmethod
     def render_md(cls, element: BeautifulSoup) -> str:
         text_list = []
@@ -108,12 +113,12 @@ class BotRssFwd(BotAction):
     def filter_feed_with_time(self, feeds: list[FeedParserDict], task: RssFwdTaskConfig) -> list[FeedParserDict]:
         # filter feeds in the future
         current = time.localtime()
-        filtered_feeds = [feed for feed in feeds if feed.published_parsed < current]
+        filtered_feeds = [feed for feed in feeds if self.feed_time_to_local_timezone(feed.published_parsed) < current]
         if len(filtered_feeds) < len(feeds):
             logger.warning(f"Ignored {len(feeds) - len(filtered_feeds)} feeds in the future.")
         # filter feeds before last update time
         last_update_time = time.localtime(self.last_fwd_time.get(task.task_key))
-        filtered_feeds = [feed for feed in filtered_feeds if feed.published_parsed > last_update_time]
+        filtered_feeds = [feed for feed in filtered_feeds if self.feed_time_to_local_timezone(feed.published_parsed) > last_update_time]
         filtered_feeds.sort(key=lambda feed: feed.published_parsed)
         return filtered_feeds
     
@@ -131,7 +136,7 @@ class BotRssFwd(BotAction):
             )
 
     def update_last_fwd_time(self, task: RssFwdTaskConfig, feed: FeedParserDict):
-        self.last_fwd_time[task.task_key] = time.mktime(feed.published_parsed)
+        self.last_fwd_time[task.task_key] = time.mktime(self.feed_time_to_local_timezone(feed.published_parsed))
         self.save_state()
 
     def process_task(self, task: RssFwdTaskConfig):
@@ -154,7 +159,7 @@ class BotRssFwd(BotAction):
             self.create_post_or_topic(task, title, post_content)
             self.update_last_fwd_time(task, feed)
 
-    @scheduled('interval', minutes=5, next_run_time=datetime.now())
+    @scheduled('interval', minutes=5, next_run_time=datetime.datetime.now())
     def on_scheduled(self):
         for task in self.config.tasks:
             try:
