@@ -17,3 +17,4 @@ scipy
 seaborn
 tabulate
 feedparser
+beautifulsoup4
