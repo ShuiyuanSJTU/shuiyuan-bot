@@ -5,6 +5,7 @@ from flask import Flask
 from flask import request, abort
 from eventlet import wsgi
 from logging.handlers import RotatingFileHandler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Set up logging
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
@@ -25,6 +26,9 @@ root_logger.addHandler(console_handler)
 from backend.bot import Config, BotManager
 from security import verify_discourse_webhook_request, verify_ip_address, verify_discourse_instance
 
+scheduler = BackgroundScheduler()
+BotManager.register_jobs_to_scheduler(scheduler)
+scheduler.start()
 app = Flask(__name__)
 
 @app.before_request
