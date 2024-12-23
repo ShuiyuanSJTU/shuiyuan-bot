@@ -16,3 +16,4 @@ pandas
 scipy
 seaborn
 tabulate
+feedparser

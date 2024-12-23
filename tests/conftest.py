@@ -56,3 +56,22 @@ def mock_config_base():
 @pytest.fixture
 def mock_config(mock_config_base):
     yield mock_config_base
+
+
+@pytest.fixture
+def patch_bot_kv_storage(mock_kv_storage):
+    mock_bot_kv_storage = create_autospec('backend.bot_kv_storage')
+    mock_bot_kv_storage.storage = MagicMock()
+    mock_bot_kv_storage.storage.get.side_effect = mock_kv_storage.get
+    mock_bot_kv_storage.storage.set.side_effect = mock_kv_storage.__setitem__
+    mock_bot_kv_storage.storage.delete.side_effect = mock_kv_storage.__delitem__
+    with patch.dict('sys.modules', {'backend.bot_kv_storage': mock_bot_kv_storage}):
+        yield mock_kv_storage
+
+@pytest.fixture
+def mock_kv_storage(mock_kv_storage_base):
+    yield mock_kv_storage_base
+
+@pytest.fixture
+def mock_kv_storage_base():
+    return {"kv_storage": {}}
