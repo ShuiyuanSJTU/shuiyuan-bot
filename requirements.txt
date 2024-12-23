@@ -16,5 +16,6 @@ pandas
 scipy
 seaborn
 tabulate
+lxml
 feedparser
 beautifulsoup4
