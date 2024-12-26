@@ -108,3 +108,16 @@ def test_feed_time_to_local_timezone(set_timezone):
     feed_time = time.gmtime(1735689600)
     local_time = BotRssFwd.feed_time_to_local_timezone(feed_time)
     assert time.mktime(local_time) == 1735689600.0
+
+def test_custom_forward_user(mock_config):
+    mock_config.action_custom_config["BotRssFwd"]["tasks"][0]["forward_username"] = "custom_user"
+    mock_config.bot_accounts.append(MagicMock(id=100, username="custom_user",
+        api_key="API_KEY_CUSTOM_USER", writable=True))
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
+    from backend.bot_account_manager import account_manager as AccountManager
+    api = MagicMock()
+    AccountManager.get_bot_client = MagicMock(side_effect={"custom_user": api}.get)
+    action = BotRssFwd()
+    action.create_post_or_topic(action.config.tasks[0], "title", "content")
+    AccountManager.get_bot_client.assert_called_once_with("custom_user")
+    api.create_topic.assert_called_once_with(title="title", raw="content", category=100)

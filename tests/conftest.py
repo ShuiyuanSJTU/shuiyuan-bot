@@ -12,14 +12,11 @@ def unload_backend_after_each_test():
             del sys.modules[module]
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_bot_api():
-    with patch('backend.discourse_api.BotAPI', autospec=True) as mock_api:
-        instance = mock_api.return_value
-        for method_name in dir(BotAPI):
-            if callable(getattr(BotAPI, method_name)) and not method_name.startswith("__"):
-                setattr(instance, method_name, MagicMock())
-        yield instance
+    with patch('backend.discourse_api.Discourse', autospec=True) as mock_api:
+        mock_api.return_value = MagicMock()
+        yield mock_api.return_value
 
 
 @pytest.fixture

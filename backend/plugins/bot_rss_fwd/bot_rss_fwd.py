@@ -11,6 +11,7 @@ from typing import Optional
 from ...bot_action import BotAction, scheduled
 from ...model.post import Post
 from ...bot_kv_storage import storage as Storage
+from ...bot_account_manager import account_manager as AccountManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class RssFwdTaskConfig(BaseModel):
     category_id: Optional[int] = None
     title_prefix: Optional[str] = None
     topic_id: Optional[int] = None
+    forward_username: Optional[str] = None
     task_key: Optional[str] = None
 
     def __init__(self, **data):
@@ -93,7 +95,7 @@ class BotRssFwd(BotAction):
                 case _:
                     text_list.append(cls.render_md(elem))
         return ''.join(text_list).strip()
-    
+
     @classmethod
     def render_plain_text(cls, element: BeautifulSoup) -> str:
         text_list = []
@@ -121,16 +123,17 @@ class BotRssFwd(BotAction):
         filtered_feeds = [feed for feed in filtered_feeds if self.feed_time_to_local_timezone(feed.published_parsed) > last_update_time]
         filtered_feeds.sort(key=lambda feed: feed.published_parsed)
         return filtered_feeds
-    
+
     def create_post_or_topic(self, task: RssFwdTaskConfig, title: str, content: str):
+        api = self.api if task.forward_username is None else AccountManager.get_bot_client(task.forward_username)
         if task.new_topic:
-            self.api.create_topic(
+            api.create_topic(
                 title=title,
                 raw=content,
                 category=task.category_id,
             )
         else:
-            self.api.create_post(
+            api.create_post(
                 topic_id=task.topic_id,
                 raw=content,
             )

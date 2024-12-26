@@ -5,7 +5,6 @@ import importlib
 
 @pytest.fixture
 def mock_config(mock_config_base):
-    mock_config_base.site_url = "http://example.com"
     mock_config_base.bot_accounts = [
         MagicMock(id=1, username="bot1", api_key="API_KEY_1",
                   writable=True, default=True),
