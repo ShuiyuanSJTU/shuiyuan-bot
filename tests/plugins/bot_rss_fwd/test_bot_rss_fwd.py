@@ -39,7 +39,7 @@ def mock_config(mock_config_base):
 
 @pytest.fixture
 def mock_rss_feed():
-    with open(os.path.join(os.path.dirname(__file__), "../data/rss_feed_data.xml"), "r") as f:
+    with open(os.path.join(os.path.dirname(__file__), "../../data/rss_feed_data.xml"), "r") as f:
         feeds = feedparser.parse(f.read())
     with patch("feedparser.parse", return_value=feeds):
         yield feeds

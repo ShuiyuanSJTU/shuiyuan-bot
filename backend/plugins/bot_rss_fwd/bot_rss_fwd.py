@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 from pydantic import BaseModel
 from typing import Optional
 
+from .markdown_converter import render_md
 from ...bot_action import BotAction, scheduled
-from ...model.post import Post
 from ...bot_kv_storage import storage as Storage
 from ...bot_account_manager import account_manager as AccountManager
 
@@ -74,43 +74,9 @@ class BotRssFwd(BotAction):
         return utc_dt.astimezone().timetuple()
 
     @classmethod
-    def render_md(cls, element: BeautifulSoup) -> str:
-        text_list = []
-        if not hasattr(element, 'children') or len(list(element.children)) == 0:
-            return element.get_text().strip()
-        for elem in element.children:
-            if elem.name in ['p', 'div', 'br']:
-                text_list.append('\n')
-            match elem.name:
-                case 'a':
-                    text = cls.render_md(elem)
-                    if text:
-                        text_list.append(f"[{text}]({elem['href']})")
-                case 'strong':
-                    text_list.append(f" **{cls.render_md(elem)}** ")
-                case 'em':
-                    text_list.append(f" *{cls.render_md(elem)}* ")
-                case 'img':
-                    text_list.append(f"![{elem.get('alt','')}]({elem['src']})")
-                case _:
-                    text_list.append(cls.render_md(elem))
-        return ''.join(text_list).strip()
-
-    @classmethod
-    def render_plain_text(cls, element: BeautifulSoup) -> str:
-        text_list = []
-        if not hasattr(element, 'children') or len(list(element.children)) == 0:
-            return element.get_text().strip()
-        for elem in element.children:
-            if elem.name in ['p', 'div', 'br']:
-                text_list.append('\n')
-            text_list.append(cls.render_plain_text(elem))
-        return ''.join(text_list).strip()
-
-    @classmethod
     def render_feed(cls, feed: FeedParserDict) -> str:
         element = BeautifulSoup(feed.summary, 'lxml')
-        return cls.render_md(element)
+        return render_md(element)
 
     def filter_feed_with_time(self, feeds: list[FeedParserDict], task: RssFwdTaskConfig) -> list[FeedParserDict]:
         # filter feeds in the future
