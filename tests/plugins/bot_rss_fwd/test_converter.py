@@ -1,6 +1,10 @@
 import pytest
 from bs4 import BeautifulSoup
 
+@pytest.fixture(autouse=True)
+def auto_patch(patch_bot_config, patch_bot_kv_storage):
+    yield
+
 @pytest.mark.parametrize('html, expected', [
     ('<h1>hello</h1>', '# hello\n'),
     ('<h2>hello</h2>', '## hello\n'),
