@@ -59,6 +59,15 @@ def test_render_a(html, expected):
     assert render_md(element) == expected
 
 @pytest.mark.parametrize('html, expected', [
+    ('<table><tr><td>hello</td></tr></table>', '<table><tr><td>hello</td></tr></table>\n'),
+    ('<table id="tab"><tr class="tab1"><td style="">test</td></tr></table>', '<table><tr><td>test</td></tr></table>\n')
+])
+def test_render_table(html, expected):
+    from backend.plugins.bot_rss_fwd.markdown_converter import render_md
+    element = BeautifulSoup(html, 'lxml')
+    assert render_md(element) == expected
+
+@pytest.mark.parametrize('html, expected', [
     ('<strong>hello</strong>', ' **hello** '),
     ('<strong><strong>hello</strong></strong>', ' **hello** '),
     ('<em>hello</em>', ' *hello* '),
@@ -87,6 +96,17 @@ def test_merge_neibours(html, expected):
     ('<p>https://example.com/一二三</p>', 'https://example.com/ 一二三\n'),
 ])
 def test_fix_url_in_text_node(html, expected):
+    from backend.plugins.bot_rss_fwd.markdown_converter import render_md
+    element = BeautifulSoup(html, 'lxml')
+    assert render_md(element) == expected
+
+@pytest.mark.parametrize('html, expected', [
+    ('<p>hello</p><p>hello</p>', 'hello\nhello\n'),
+    ('<p>hello</p><br><p>hello</p>', 'hello\n\nhello\n'),
+    ('<span>1</span><span>2</span><p>3</p>', '12\n3\n'),
+    ('<span>1</span><span>2</span><h1>3</h1>', '12\n# 3\n'),
+])
+def test_instert_breakline(html, expected):
     from backend.plugins.bot_rss_fwd.markdown_converter import render_md
     element = BeautifulSoup(html, 'lxml')
     assert render_md(element) == expected

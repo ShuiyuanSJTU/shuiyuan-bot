@@ -1,3 +1,34 @@
+# Render workflow
+# - render as block element
+#   - if text node
+#     - render as text node
+#   - if one of (h1, h2, h3)
+#     - render children as inline element to markdown string
+#   - if table
+#     - cleanup html element and directly instert html
+#   - render children as block element
+#     - iterate through children
+#       - if one of (p, div, h1, h2, h3, body, html, [document])
+#         - render as block element
+#       - if br
+#         - insert line break
+#       - else
+#         - render as inline element
+#           - if single text node
+#             - render as text node
+#           - if a
+#             - render children as inline element to markdown string
+#           - if img
+#             - render as image node
+#           - if in (strong, em) or any other
+#             - render children as inline element
+#               - iterate through children
+#                 - render as inline element
+# - merge neighbour text nodes with same style
+# - fix url in text node
+# - render nodes to markdown string
+
+
 from bs4.element import NavigableString, Tag
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
@@ -6,6 +37,8 @@ from enum import Enum
 import re
 
 class NodeType(Enum):
+    RAW_HTML = -2
+    RAW_MARKDOWN = -1
     EMPTY = 0
     TEXT = 1
     A = 2
@@ -24,6 +57,10 @@ class MarkdownNode:
     type: NodeType = NodeType.EMPTY
     def __str__(self):
         match self.type:
+            case NodeType.RAW_HTML:
+                return self.content
+            case NodeType.RAW_MARKDOWN:
+                return self.content
             case NodeType.EMPTY:
                 return ''
             case NodeType.TEXT:
@@ -51,17 +88,14 @@ def _convert_block_element_children_to_mdnode(element: Tag) -> list[MarkdownNode
     nodes = []
     last_element_inline = False
     for elem in element.children:
-        if elem.name in ('html', 'body', '[document]'):
-            nodes.extend(_convert_block_element_children_to_mdnode(elem))
-        elif elem.name in ('h1', 'h2', 'h3'):
-            nodes.extend(_convert_block_element_to_mdnode(elem))
-        elif elem.name in ('p', 'div'):
+        if elem.name in ('p', 'div', 'h1', 'h2', 'h3', 'table', 'html', 'body', '[document]'):
             # handle block level elements
             if last_element_inline:
                 nodes.append(MarkdownNode('', type=NodeType.LINE_BREAK))
                 last_element_inline = False
             nodes.extend(_convert_block_element_to_mdnode(elem))
-            nodes.append(MarkdownNode('', type=NodeType.LINE_BREAK))
+            if elem.name in ('p', 'div', 'h1', 'h2', 'h3', 'table'):
+                nodes.append(MarkdownNode('', type=NodeType.LINE_BREAK))
         elif elem.name == 'br':
             nodes.append(MarkdownNode('', type=NodeType.LINE_BREAK))
             last_element_inline = False
@@ -84,26 +118,15 @@ def _convert_block_element_to_mdnode(element: Union[Tag, NavigableString]) -> li
                 header_node = MarkdownNode(content, type=NodeType.H2)
             case 'h3':
                 header_node = MarkdownNode(content, type=NodeType.H3)
-        return [header_node, MarkdownNode('', type=NodeType.LINE_BREAK)]
+        return [header_node]
+    elif element.name == 'table':
+        return [MarkdownNode(_convert_to_clean_html(element), type=NodeType.RAW_HTML)]
     return _convert_block_element_children_to_mdnode(element)
 
 def _convert_inline_element_children_to_mdnode(element: Tag, strong=False, italic=False) -> list[MarkdownNode]:
     nodes = []
     for elem in element.children:
         nodes.extend(_convert_inline_element_to_mdnode(elem, strong, italic))
-        # match elem.name:
-        #     case 'a':
-        #         text = _render_inline_element_md(elem, strong, italic)
-        #         if text:
-        #             nodes.append(MarkdownNode(text, elem['href'], type=NodeType.A))
-        #     case 'strong':
-        #         nodes.extend(_convert_inline_element_to_mdnode(elem, True, italic))
-        #     case 'em':
-        #         nodes.extend(_convert_inline_element_to_mdnode(elem, strong, True))
-        #     case 'img':
-        #         nodes.append(MarkdownNode(elem['alt'], elem['src'], type=NodeType.IMAGE))
-        #     case _:
-        #         nodes.extend(_convert_inline_element_to_mdnode(elem, strong, italic))
     return nodes
 
 def _convert_inline_element_to_mdnode(element: Union[Tag, NavigableString], strong=False, italic=False) -> list[MarkdownNode]:
@@ -123,12 +146,7 @@ def _convert_inline_element_to_mdnode(element: Union[Tag, NavigableString], stro
             return _convert_inline_element_children_to_mdnode(element, strong, True)
         case _:
             return _convert_inline_element_children_to_mdnode(element, strong, italic)
-    # if element.name == 'strong':
-    #     strong = True
-    # elif element.name == 'em':
-    #     italic = True
-    # return _convert_inline_element_children_to_mdnode(element, strong, italic)
-    
+
 def _merge_neighbour_nodes(nodes: list[MarkdownNode]) -> list[MarkdownNode]:
     last_node = MarkdownNode('', type=NodeType.EMPTY)
     new_nodes = []
@@ -165,6 +183,20 @@ def _fix_url_in_text_node(nodes: list[MarkdownNode]) -> list[MarkdownNode]:
             pattern = re.compile(r'(https?://[\x21-\x7E]+)([^\x00-\x7F])')
             node.content = pattern.sub(r'\1 \2', node.content)
     return nodes
+
+def _convert_to_clean_html(element: Tag) -> str:
+    # it whould be protentially risky to modify the original element
+    # but for our use case, we can simply assume the element is not used elsewhere
+    _cleanup_html_element(element)
+    return str(element)
+
+def _cleanup_html_element(element: Tag) -> Tag:
+    # remove style, class, id attributes
+    # although Discourse will sanitize the HTML, it's better to remove them
+    element.attrs = {k:v for k,v in element.attrs.items() if k not in ('style', 'class', 'id')}
+    for child in element.children:
+        if isinstance(child, Tag):
+            _cleanup_html_element(child)
 
 def render_md(element) -> str:
     nodes = _merge_neighbour_nodes(_convert_block_element_to_mdnode(element))
