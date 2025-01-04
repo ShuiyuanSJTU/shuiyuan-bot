@@ -33,4 +33,4 @@ class BotForward(BotAction):
 
     def forward_post(self, post: Post, target_topic_id: int, forward_username: str):
         bot_client = AccountManager.get_bot_client(forward_username)
-        bot_client.create_post(post.raw, target_topic_id)
+        bot_client.create_post(post.raw, target_topic_id, skip_validations=True)

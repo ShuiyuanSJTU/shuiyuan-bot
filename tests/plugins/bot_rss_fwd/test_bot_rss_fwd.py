@@ -120,4 +120,4 @@ def test_custom_forward_user(mock_config):
     action = BotRssFwd()
     action.create_post_or_topic(action.config.tasks[0], "title", "content")
     AccountManager.get_bot_client.assert_called_once_with("custom_user")
-    api.create_topic.assert_called_once_with(title="title", raw="content", category=100)
+    api.create_topic.assert_called_once_with(title="title", raw="content", category=100, skip_validations=True)

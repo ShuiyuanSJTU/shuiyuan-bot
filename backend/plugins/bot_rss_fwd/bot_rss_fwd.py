@@ -97,11 +97,13 @@ class BotRssFwd(BotAction):
                 title=title,
                 raw=content,
                 category=task.category_id,
+                skip_validations=True,
             )
         else:
             api.create_post(
                 topic_id=task.topic_id,
                 raw=content,
+                skip_validations=True,
             )
 
     def update_last_fwd_time(self, task: RssFwdTaskConfig, feed: FeedParserDict):
