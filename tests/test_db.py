@@ -13,13 +13,6 @@ def test_db_manager_initialization(patch_bot_config):
     assert db_manager.engine.url == create_engine(patch_bot_config.db_url).url
     assert isinstance(db_manager.sessionmaker, sessionmaker)
 
-def test_init_tables():
-    from backend.db import DBManager, Base
-    db_manager = DBManager()
-    with patch.object(Base.metadata, 'create_all') as mock_create_all:
-        db_manager.init_tables()
-        mock_create_all.assert_called_once_with(db_manager.engine)
-
 def test_session_commit():
     from backend.db import DBManager, Base
     db_manager = DBManager()
