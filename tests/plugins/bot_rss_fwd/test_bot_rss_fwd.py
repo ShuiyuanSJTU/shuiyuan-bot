@@ -1,10 +1,17 @@
 import pytest
-from unittest.mock import mock_open, patch, MagicMock
-from backend.model import Post
-from freezegun import freeze_time
+from unittest.mock import patch, MagicMock
 import os
 import time
 import feedparser
+
+@pytest.fixture
+def init_table(mock_config):
+    from backend.db import DBManager
+    import backend.plugins.bot_rss_fwd.bot_rss_fwd
+    db_manager = DBManager()
+    db_manager.init_tables()
+    with db_manager.scoped_session() as session:
+        yield
 
 @pytest.fixture
 def set_timezone(request):
@@ -48,7 +55,6 @@ def mock_rss_feed():
 def auto_patch(patch_bot_config, patch_bot_kv_storage, mock_rss_feed):
     yield
 
-@freeze_time("2025-01-01 00:00:00 UTC")
 def test_initialization():
     from backend.bot_kv_storage import storage
     from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
@@ -57,7 +63,6 @@ def test_initialization():
     assert action.config.rsshub_url == "https://rsshub.example.com"
     assert len(action.config.tasks) == 1
     assert len(action._schedules) == 1
-    assert storage.get("rss_fwd_time").get("/test_100_None", None) == 1735689600.0
 
 def test_fetch_feeds():
     from backend.bot_config import config as Config
@@ -81,27 +86,6 @@ def test_fetch_feeds():
     parse.assert_any_call("https://rsshub.example.com/test2")
     assert len(parse.mock_calls) == 2
 
-@freeze_time("2021-01-01 00:00:00 UTC")
-def test_warn_if_feed_in_future(caplog, mock_rss_feed):
-    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
-    BotRssFwd.create_post_or_topic = MagicMock()
-    action = BotRssFwd()
-    action.on_scheduled()
-    assert f"Ignored {len(mock_rss_feed.entries)} feeds in the future." in caplog.text
-    BotRssFwd.create_post_or_topic.assert_not_called()
-
-@freeze_time("2024-12-31 00:00:00 UTC")
-@pytest.mark.parametrize("set_timezone", [("UTC"), ("Asia/Shanghai")], indirect=True)
-def test_ignore_past_feed(set_timezone):
-    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
-    from backend.bot_kv_storage import storage
-    storage.set("rss_fwd_time", {"/test_100_None": 1734393600.0})
-    BotRssFwd.create_post_or_topic = MagicMock()
-    action = BotRssFwd()
-    action.on_scheduled()
-    BotRssFwd.create_post_or_topic.assert_called_once()
-    assert storage.get("rss_fwd_time").get("/test_100_None", None) == 1734537600.0
-
 @pytest.mark.parametrize("set_timezone", [("UTC"), ("Asia/Shanghai")], indirect=True)
 def test_feed_time_to_local_timezone(set_timezone):
     from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
@@ -116,8 +100,47 @@ def test_custom_forward_user(mock_config):
     from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
     from backend.bot_account_manager import account_manager as AccountManager
     api = MagicMock()
+    api.create_topic.side_effect = Exception("Stop execution")
     AccountManager.get_bot_client = MagicMock(side_effect={"custom_user": api}.get)
     action = BotRssFwd()
-    action.create_post_or_topic(action.config.tasks[0], "title", "content")
+    with pytest.raises(Exception, match="Stop execution"):
+        action.create_post_or_topic(action.config.tasks[0], "title", "content")
     AccountManager.get_bot_client.assert_called_once_with("custom_user")
     api.create_topic.assert_called_once_with(title="title", raw="content", category=100, skip_validations=True)
+
+def test_filter_feed(init_table, mock_rss_feed):
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd, RssFwdRecord
+    all_feeds = mock_rss_feed.entries
+    action = BotRssFwd()
+    feeds = action.filter_feed(all_feeds, action.config.tasks[0])
+    assert len(feeds) == 2
+    RssFwdRecord(task_id="/test_100_None", guid=all_feeds[0].guid).save()
+    feeds = action.filter_feed(all_feeds, action.config.tasks[0])
+    assert len(feeds) == 1
+    assert feeds[0].guid == all_feeds[1].guid
+
+def test_record_feed(init_table, mock_rss_feed):
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd, RssFwdRecord
+    action = BotRssFwd()
+    action.record_feed(action.config.tasks[0], mock_rss_feed.entries[0])
+    assert RssFwdRecord.where(task_id="/test_100_None").count() == 1
+    record = RssFwdRecord.find(task_id="/test_100_None")
+    assert record.guid == mock_rss_feed.entries[0].guid
+    assert record.topic_id is None
+    assert record.post_id is None
+    post = MagicMock()
+    post.id = 100
+    post.topic_id = 200
+    action.record_feed(action.config.tasks[0], mock_rss_feed.entries[1], post)
+    record = RssFwdRecord.find(task_id="/test_100_None", guid=mock_rss_feed.entries[1].guid)
+    assert record.topic_id == 200
+    assert record.post_id == 100
+    assert RssFwdRecord.where(task_id="/test_100_None").count() == 2
+
+def test_handle_new_task(init_table):
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd, RssFwdRecord
+    action = BotRssFwd()
+    assert action.config.tasks[0].is_new_task
+    action.on_scheduled()
+    assert RssFwdRecord.where(task_id="/test_100_None").count() == 2
+    assert not action.config.tasks[0].is_new_task
