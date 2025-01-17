@@ -8,7 +8,7 @@ from backend.model.user import BasicUser
 
 @pytest.fixture(scope="module")
 def test_data():
-    with open(os.path.join(os.path.dirname(__file__), "data/test_model_data.json")) as f:
+    with open(os.path.join(os.path.dirname(__file__), "data/test_model_post_data.json")) as f:
         return json.load(f)
 
 

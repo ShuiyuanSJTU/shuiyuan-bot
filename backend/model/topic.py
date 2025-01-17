@@ -35,7 +35,7 @@ class Topic(BaseModel):
     queued_posts_count: int
     thumbnails: Optional[str]
     created_by: BasicUser
-    last_poster: BasicUser
+    last_poster: Optional[BasicUser] = None
     summarizable: bool
     pending_posts: List[Any]
     tags: List[str]

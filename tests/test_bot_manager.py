@@ -6,8 +6,12 @@ import json
 
 @pytest.fixture(scope="module")
 def test_data():
-    with open(os.path.join(os.path.dirname(__file__), "data/test_model_data.json")) as f:
-        return {'post': json.load(f)['webhook_with_reply_to']}
+    data = {}
+    with open(os.path.join(os.path.dirname(__file__), "data/test_model_post_data.json")) as f:
+        data['post'] = json.load(f)['webhook_with_reply_to']
+    with open(os.path.join(os.path.dirname(__file__), "data/test_model_topic_data.json")) as f:
+        data['topic'] = json.load(f)['topic']
+    return data
 
 @pytest.fixture
 def mock_activated_actions():
@@ -39,6 +43,7 @@ def mock_plugins():
 
 def test_trigger_event_post_created(patch_bot_config, test_data, mock_activated_actions):
     from backend.bot_manager import bot_manager as BotManager
+    from backend.model import Post
     mock_action = MagicMock()
     mock_action.enabled = True
     mock_activated_actions['test_action'] = mock_action
@@ -48,7 +53,23 @@ def test_trigger_event_post_created(patch_bot_config, test_data, mock_activated_
     mock_action.trigger.assert_called_once()
     args, kwargs = mock_action.trigger.call_args
     assert args == ('post_created',)
+    assert isinstance(kwargs['post'], Post)
     assert kwargs['post'].id == test_data['post']['id']
+
+def test_trigger_event_topic_created(patch_bot_config, test_data, mock_activated_actions):
+    from backend.bot_manager import bot_manager as BotManager
+    from backend.model import Topic
+    mock_action = MagicMock()
+    mock_action.enabled = True
+    mock_activated_actions['test_action'] = mock_action
+
+    BotManager.trigger_event('topic_created', test_data)
+
+    mock_action.trigger.assert_called_once()
+    args, kwargs = mock_action.trigger.call_args
+    assert args == ('topic_created',)
+    assert isinstance(kwargs['topic'], Topic)
+    assert kwargs['topic'].id == test_data['topic']['id']
 
 def test_trigger_event_action_disabled(patch_bot_config, test_data, mock_activated_actions):
     from backend.bot_manager import bot_manager as BotManager

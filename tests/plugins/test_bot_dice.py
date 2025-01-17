@@ -8,7 +8,7 @@ import numpy as np
 
 @pytest.fixture
 def test_post():
-    with open(os.path.join(os.path.dirname(__file__), "../data/test_model_data.json")) as f:
+    with open(os.path.join(os.path.dirname(__file__), "../data/test_model_post_data.json")) as f:
         return Post(**(json.load(f)['webhook_with_reply_to']))
 
 @pytest.fixture(autouse=True)

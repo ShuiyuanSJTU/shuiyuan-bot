@@ -2,7 +2,7 @@ import logging
 from typing import Type
 from .utils.singleton import Singleton
 from .bot_action import BotAction, ActionResult
-from .model.post import Post
+from .model import Post, Topic
 from .bot_config import config as Config
 
 logger = logging.getLogger(__name__)
@@ -55,6 +55,9 @@ class BotManager:
                 if Config.limited_mode and post.username not in Config.limited_usernames:
                     return
                 kwargs['post'] = post
+            case "topic_created":
+                topic = Topic(**data['topic'])
+                kwargs['topic'] = topic
             case "ping":
                 pass
 
