@@ -1,0 +1,9 @@
+Generic single-database configuration.
+
+Version files are stored in:
+* `alembic/versions`
+* `backend/plugins/*/db/versions`
+
+Run `alembic upgrade heads` to apply the most recent migration.
+
+To create a new migration, run `alembic revision --autogenerate -m "MESSAGE" --version-path=PATH`.

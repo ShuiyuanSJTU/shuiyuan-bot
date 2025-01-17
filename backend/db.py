@@ -45,7 +45,12 @@ class DBManager:
             logger.warning("Using in-memory database, data will be lost on restart")
 
     def init_tables(self):
-        Base.metadata.create_all(self._engine)
+        if is_running_under_pytest():
+            Base.metadata.create_all(self._engine)
+        else: # pragma: no cover
+            logger.error("init_tables should only be called in test environment")
+            logger.error("Please use alembic to manage database schema")
+            logger.error("Run `alembic upgrade head`")
 
     @contextmanager
     def scoped_session(self):

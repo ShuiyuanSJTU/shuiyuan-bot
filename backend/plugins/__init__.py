@@ -27,7 +27,6 @@ def load_plugins():
                     elif not obj is BotAction:
                         logging.warning(
                             f"Class {obj} is a subclass of BotAction but does not have a valid action_name, so it is not registered.")
-    DBManager.init_tables()
     for action_cls in collected_actions:
         BotManager.register_bot_action(action_cls)
 

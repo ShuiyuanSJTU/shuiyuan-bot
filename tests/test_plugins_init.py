@@ -83,4 +83,3 @@ def test_load_plugins(patch_bot_config, bypass_db_init, mock_pkgutil, mock_impor
     BotManager.register_bot_action.assert_any_call(mock_module2.BotAction2)
     BotManager.register_bot_action.assert_any_call(mock_module3.BotAction3)
     assert mock_module4.BotAction4 not in BotManager.register_bot_action.call_args_list
-    DBManager.init_tables.assert_called_once()
