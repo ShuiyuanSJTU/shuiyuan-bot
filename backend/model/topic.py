@@ -18,7 +18,7 @@ class Topic(BaseModel):
     archived: bool
     archetype: str
     slug: str
-    category_id: int
+    category_id: Optional[int]
     word_count: int
     deleted_at: Optional[str]
     user_id: int
@@ -33,7 +33,7 @@ class Topic(BaseModel):
     bookmarked: bool
     participant_count: int
     queued_posts_count: int
-    thumbnails: Optional[str]
+    thumbnails: Optional[list]
     created_by: BasicUser
     last_poster: Optional[BasicUser] = None
     summarizable: bool
