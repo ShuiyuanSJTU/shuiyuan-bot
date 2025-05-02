@@ -6,4 +6,4 @@ Version files are stored in:
 
 Run `alembic upgrade heads` to apply the most recent migration.
 
-To create a new migration, run `alembic revision --autogenerate -m "MESSAGE" --version-path=PATH`.
+To create a new migration, run `alembic revision --autogenerate -m "MESSAGE" --version-path=<PATH> --head <HEAD>`. For a new plugin, use `base` as the head.

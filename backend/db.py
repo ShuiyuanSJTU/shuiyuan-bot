@@ -15,12 +15,17 @@ class Base(_Base):
     __abstract__ = True
 
     @classmethod
-    def where(cls, **kwargs):
-        return db_manager._scoped_session().query(cls).filter_by(**kwargs)
+    def where(cls, *args, **kwargs):
+        if len(args) > 0 and len(kwargs) > 0:
+            raise ValueError("You can only use either positional or keyword arguments, not both.")
+        if len(args) > 0:
+            return db_manager._scoped_session().query(cls).filter(*args)
+        else:
+            return db_manager._scoped_session().query(cls).filter_by(**kwargs)
 
     @classmethod
-    def find(cls, **kwargs):
-        return db_manager._scoped_session().query(cls).filter_by(**kwargs).first()
+    def find(cls, *args, **kwargs):
+        return cls.where(*args, **kwargs).first()
 
     def save(self):
         session = db_manager._scoped_session()

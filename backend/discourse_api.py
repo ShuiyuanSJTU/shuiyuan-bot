@@ -45,6 +45,9 @@ class BotAPI:
             post_data["reply_to_post_number"] = reply_to_post_number
         kwargs.update(post_data)
         return self.create_post_raw(kwargs)
+    
+    def delete_post(self, post_id):
+        return self.client.posts[post_id].json.delete()
 
     def create_topic(self, title, raw, category, tags = None, **kwargs):
         topic_data = {
