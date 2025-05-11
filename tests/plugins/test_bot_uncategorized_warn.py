@@ -2,6 +2,8 @@ import pytest
 import os
 import json
 from unittest.mock import MagicMock, patch
+
+from pytz import UTC
 from backend.model.topic import Topic
 from datetime import datetime, timedelta
 
@@ -60,7 +62,7 @@ def test_check_warnings_close_topic(test_data):
     from backend.plugins.bot_uncategorized_warn.bot_uncategorized_warn import BotUncategorizedWarn, UncategorizedTopicWarningRecord, WarningStatus
     action = BotUncategorizedWarn()
 
-    UncategorizedTopicWarningRecord(topic_id=1, post_id=123, status=WarningStatus.PENDING, created_at=datetime.now() - timedelta(minutes=40)).save()
+    UncategorizedTopicWarningRecord(topic_id=1, post_id=123, status=WarningStatus.PENDING, created_at=datetime.now(UTC) - timedelta(minutes=40)).save()
 
     action.api = MagicMock()
     action.api.get_topic_by_id.return_value = test_data['topic']

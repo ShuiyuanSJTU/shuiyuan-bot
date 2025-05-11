@@ -48,7 +48,7 @@ class BotUncategorizedWarn(BotAction):
                     self.api.delete_post(record.post_id)
                     record.save()
                 else:
-                    if record.created_at < datetime.datetime.now(UTC) - datetime.timedelta(minutes=30):
+                    if record.created_at.replace(tzinfo=UTC) < datetime.datetime.now(UTC) - datetime.timedelta(minutes=30):
                         record.status = WarningStatus.EXPIRED
                         self.api.close_topic(topic.id)
                         record.save()
