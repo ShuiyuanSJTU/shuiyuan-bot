@@ -7,6 +7,7 @@ from sqlalchemy import Column, Integer, DateTime, Enum
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 import datetime
+from pytz import UTC
 
 class WarningStatus(PyEnum):
     PENDING = "pending"
@@ -20,7 +21,7 @@ class UncategorizedTopicWarningRecord(Base):
     topic_id = Column(Integer, nullable=False)
     post_id = Column(Integer, nullable=False)
     status = Column(Enum(WarningStatus), default=WarningStatus.PENDING, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC), nullable=False)
 
 UNCATEGORIZED_WARN_MESSAGE = "请勿选择未分类，也请不要随意发在聊聊水源，发帖前仔细阅读分类描述后选择。"
 
@@ -47,7 +48,7 @@ class BotUncategorizedWarn(BotAction):
                     self.api.delete_post(record.post_id)
                     record.save()
                 else:
-                    if record.created_at < datetime.datetime.now() - datetime.timedelta(minutes=30):
+                    if record.created_at < datetime.datetime.now(UTC) - datetime.timedelta(minutes=30):
                         record.status = WarningStatus.EXPIRED
                         self.api.close_topic(topic.id)
                         record.save()
