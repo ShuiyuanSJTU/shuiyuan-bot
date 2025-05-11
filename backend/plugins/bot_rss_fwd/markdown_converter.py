@@ -138,6 +138,8 @@ def _convert_inline_element_to_mdnode(element: Union[Tag, NavigableString], stro
             href = element.attrs.get('href', '')
             if text:
                 return [MarkdownNode(text, href, type=NodeType.A)]
+            else:
+                return [MarkdownNode(href, href, type=NodeType.A)]
         case 'img':
             return [MarkdownNode(element.attrs.get('alt', ''), element.attrs.get('src', ''), type=NodeType.IMAGE)]
         case 'strong':
