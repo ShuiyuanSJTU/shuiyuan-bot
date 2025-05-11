@@ -6,37 +6,37 @@ from .user import BasicUser
 class Topic(BaseModel):
     id: int
     title: str
-    fancy_title: str
-    posts_count: int
     created_at: str
-    views: int
-    reply_count: int
-    like_count: int
-    last_posted_at: str
-    visible: bool
-    closed: bool
-    archived: bool
-    archetype: str
-    slug: str
-    category_id: Optional[int]
-    word_count: int
-    deleted_at: Optional[str]
     user_id: int
-    pinned_globally: bool
-    pinned_at: Optional[str]
-    pinned_until: Optional[str]
-    unpinned: Optional[bool]
-    pinned: bool
-    highest_post_number: int
-    deleted_by: Optional[int]
-    has_deleted: bool
-    bookmarked: bool
-    participant_count: int
-    queued_posts_count: int
-    thumbnails: Optional[list]
-    created_by: BasicUser
+    fancy_title: Optional[str] = None
+    posts_count: Optional[int] = None
+    views: Optional[int] = None
+    reply_count: Optional[int] = None
+    like_count: Optional[int] = None
+    last_posted_at: Optional[str] = None
+    visible: Optional[bool] = None
+    closed: Optional[bool] = None
+    archived: Optional[bool] = None
+    archetype: Optional[str] = None
+    slug: Optional[str] = None
+    category_id: Optional[int] = None
+    word_count: Optional[int] = None
+    deleted_at: Optional[str] = None
+    pinned_globally: Optional[bool] = None
+    pinned_at: Optional[str] = None
+    pinned_until: Optional[str] = None
+    unpinned: Optional[bool] = None
+    pinned: Optional[bool] = None
+    highest_post_number: Optional[int] = None
+    deleted_by: Optional[int] = None
+    has_deleted: Optional[bool] = None
+    bookmarked: Optional[bool] = None
+    participant_count: Optional[int] = None
+    queued_posts_count: Optional[int] = None
+    thumbnails: Optional[list] = None
+    created_by: Optional[BasicUser] = None
     last_poster: Optional[BasicUser] = None
-    summarizable: bool
-    pending_posts: List[Any]
-    tags: List[str]
-    tags_descriptions: Dict[str, str]
+    summarizable: Optional[bool] = None
+    pending_posts: Optional[List[Any]] = None
+    tags: Optional[List[str]] = None
+    tags_descriptions: Optional[Dict[str, str]] = None
