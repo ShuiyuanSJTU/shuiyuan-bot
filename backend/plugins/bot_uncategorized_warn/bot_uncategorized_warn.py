@@ -6,13 +6,17 @@ from ...db import Base
 from sqlalchemy import Column, Integer, DateTime, Enum
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
-import datetime
 from pytz import UTC
+import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class WarningStatus(PyEnum):
     PENDING = "pending"
     REMOVED = "removed"
     EXPIRED = "expired"
+    EXCPTION = "exception"
 
 class UncategorizedTopicWarningRecord(Base):
     __tablename__ = "uncategorized_topic_warning_records"
@@ -42,14 +46,20 @@ class BotUncategorizedWarn(BotAction):
             records = UncategorizedTopicWarningRecord.where(status=WarningStatus.PENDING).all()
 
             for record in records:
-                topic = Topic(**self.api.get_topic_by_id(record.topic_id))
-                if topic.category_id != 1:
-                    record.status = WarningStatus.REMOVED
-                    self.api.delete_post(record.post_id)
-                    record.save()
-                else:
-                    if record.created_at.replace(tzinfo=UTC) < datetime.datetime.now(UTC) - datetime.timedelta(minutes=30):
-                        record.status = WarningStatus.EXPIRED
-                        self.api.close_topic(topic.id)
+                try:
+                    topic = Topic(**self.api.get_topic_by_id(record.topic_id))
+                    if topic.category_id != 1:
+                        record.status = WarningStatus.REMOVED
+                        self.api.delete_post(record.post_id)
+                        record.save()
+                    else:
+                        if record.created_at.replace(tzinfo=UTC) < datetime.datetime.now(UTC) - datetime.timedelta(minutes=30):
+                            record.status = WarningStatus.EXPIRED
+                            self.api.close_topic(topic.id)
+                            record.save()
+                except Exception as e:
+                    logger.exception(f"Error checking warning for topic {record.topic_id}: {e}")
+                    if record.created_at.replace(tzinfo=UTC) < datetime.datetime.now(UTC) - datetime.timedelta(minutes=120):
+                        record.status = WarningStatus.EXCPTION
                         record.save()
 
