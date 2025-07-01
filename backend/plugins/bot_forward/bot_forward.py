@@ -17,10 +17,11 @@ class BotForward(BotAction):
 
     def __init__(self):
         super().__init__()
-        self.forward_tasks: list[ForwardTask] = [ForwardTask(**task) for task in self.config.get("forward_tasks", [])]
-        if len(self.forward_tasks) == 0:
-            logger.warning("No forward task is configured.")
-        self.watching_topic_ids = set([task.source_topic_id for task in self.forward_tasks])
+        if self.enabled:
+            self.forward_tasks: list[ForwardTask] = [ForwardTask(**task) for task in self.config.get("forward_tasks", [])]
+            if len(self.forward_tasks) == 0:
+                logger.warning("No forward task is configured.")
+            self.watching_topic_ids = set([task.source_topic_id for task in self.forward_tasks])
 
     @on("post_created")
     def on_post_created(self, post: Post):

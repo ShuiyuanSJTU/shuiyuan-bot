@@ -24,7 +24,8 @@ class BotPostReport(BaseBotReportAction):
 
     def __init__(self) -> None:
         super().__init__()
-        self.load_global_report_data()
+        if self.enabled:
+            self.load_global_report_data()
 
     def load_global_report_data(self):
         processed_data_path = os.path.join(
