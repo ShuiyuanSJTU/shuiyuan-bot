@@ -5,9 +5,6 @@ from .bot_action_annual_interaction_report import BotInteractionReport
 from .bot_action_annual_post_report import BotPostReport
 from .bot_action_annual_read_report import BotReadReport
 
-from ...utils.redis_cache import redis_cache
-from ...bot_action import on, ActionResult
-from ...model import Post
 from ...bot_manager import bot_manager as BotManager
 
 
@@ -38,19 +35,19 @@ class BotSummaryReport(BaseBotReportAction):
         try:
             action_response.append(self.read_report.get_reply_main_content(
                 user_id, post_data, opts))
-        except Exception as e:
+        except Exception:
             pass
 
         try:
             action_response.append(self.post_report.get_reply_main_content(
                 user_id, post_data, opts))
-        except Exception as e:
+        except Exception:
             pass
 
         try:
             action_response.append(self.interaction_report.get_reply_main_content(
                 user_id, post_data, opts))
-        except Exception as e:
+        except Exception:
             pass
 
         raw = "\n\n".join(action_response)

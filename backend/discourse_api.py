@@ -100,7 +100,6 @@ class BotAPI:
         self.close_topic(old_topic_id)
         new_topic = self.create_topic(title, raw, category, tags, **kwargs)
         new_post_id = new_topic.get('id')
-        new_topic_id = new_topic.get('topic_id')
         self.update_post_wiki(new_post_id, True)
         return new_topic
 
@@ -118,7 +117,7 @@ class BotAPI:
         if r.status_code == 200:
             try:
                 return r.json()
-            except requests.JSONDecodeError as e:
+            except requests.JSONDecodeError:
                 # Request succeeded but response body was not valid JSON
                 return r.text
         elif r.status_code == 429:

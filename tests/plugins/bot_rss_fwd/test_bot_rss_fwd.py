@@ -7,10 +7,10 @@ import feedparser
 @pytest.fixture
 def init_table(mock_config):
     from backend.db import DBManager
-    import backend.plugins.bot_rss_fwd.bot_rss_fwd
+    import backend.plugins.bot_rss_fwd.bot_rss_fwd  # noqa: F401
     db_manager = DBManager()
     db_manager.init_tables()
-    with db_manager.scoped_session() as session:
+    with db_manager.scoped_session():
         yield
 
 @pytest.fixture
@@ -56,7 +56,6 @@ def auto_patch(patch_bot_config, patch_bot_kv_storage, mock_rss_feed):
     yield
 
 def test_initialization():
-    from backend.bot_kv_storage import storage
     from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
     action = BotRssFwd()
     assert action.config.enabled

@@ -11,7 +11,6 @@ from .report_plot import plot_post_activity_hour, plot_post_activity_year
 from .preprocess_data import preprocess_posts_data
 
 from ...utils.redis_cache import redis_cache
-from ...bot_action import on, ActionResult
 from ...model import Post
 
 logger = logging.getLogger(__name__)

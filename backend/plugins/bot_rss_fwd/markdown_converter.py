@@ -30,7 +30,6 @@
 
 
 from bs4.element import NavigableString, Tag
-from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from typing import Union
 from enum import Enum

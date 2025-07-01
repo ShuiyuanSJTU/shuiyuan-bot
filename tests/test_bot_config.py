@@ -1,7 +1,5 @@
 import pytest
 from unittest.mock import mock_open, patch
-import importlib
-import sys
 
 
 @pytest.fixture
@@ -62,5 +60,5 @@ def test_init_without_existing_config():
     with patch("os.path.exists", return_value=False), \
             patch("builtins.open", mock_open()) as mock_init_config_file:
         with pytest.raises(SystemExit):
-            from backend.bot_config import config
+            from backend.bot_config import config  # noqa: F401
         mock_init_config_file.assert_called_once_with("config.yaml", 'w')

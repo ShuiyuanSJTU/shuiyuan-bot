@@ -1,9 +1,8 @@
 import pytest
-from unittest.mock import mock_open, patch, MagicMock
+from unittest.mock import MagicMock
 from backend.model import Post
 import os
 import json
-import numpy as np
 
 
 @pytest.fixture

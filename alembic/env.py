@@ -6,7 +6,6 @@ from sqlalchemy import pool
 from alembic import context
 
 from backend.bot_config import config as BotConfig
-from backend.plugins import load_plugins
 from backend.db import _Base
 
 import os

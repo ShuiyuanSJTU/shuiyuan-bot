@@ -64,7 +64,7 @@ def test_event_registration_seperate_classes(mock_config, mock_bot_action_class)
     assert action1._events_listeners["post_created"].func is action1.handle_post_created.func
     assert action2._events_listeners["post_created"].func is action2.handle_post_created.func
 
-    assert not action1._events_listeners["post_created"] is action2._events_listeners["post_created"]
+    assert action1._events_listeners["post_created"] is not action2._events_listeners["post_created"]
 
 def test_can_trigger_event(mock_bot_action_class):
     action = mock_bot_action_class()
@@ -117,7 +117,7 @@ def test_work_with_inherited_class_override_method(mock_config, mock_bot_manager
     assert "post_created" in action._events_listeners
     assert isinstance(action.handle_post_created, BotActionEventHandler)
     assert action.handle_post_created.func is TestBotAction2.__dict__["handle_post_created"].func
-    assert not action.handle_post_created.func is mock_bot_action_class.__dict__["handle_post_created"].func
+    assert action.handle_post_created.func is not mock_bot_action_class.__dict__["handle_post_created"].func
     assert action.handle_post_created.func is TestBotAction2.__dict__["handle_post_created"].func
 
 def test_register_multiple_events_on_same_method(mock_bot_action_class):
@@ -139,7 +139,7 @@ def test_register_multiple_events_on_same_method(mock_bot_action_class):
     assert set(action.handle_post_created.events) == set(["post_created", "post_edited"])
 
 def test_action_without_custom_config(mock_bot_action_class):
-    from backend.bot_action import BotActionEventHandler, on
+    from backend.bot_action import on
 
     class TestBotActionWithoutConfig(mock_bot_action_class):
         action_name = "TestBotActionWithoutConfig"

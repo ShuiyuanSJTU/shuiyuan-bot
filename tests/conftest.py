@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, create_autospec, patch
-from backend.discourse_api import BotAPI
 import os
 import sys
 import random

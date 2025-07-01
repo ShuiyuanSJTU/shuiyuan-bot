@@ -1,6 +1,5 @@
 import pytest
-import importlib
-from unittest.mock import patch, MagicMock, create_autospec
+from unittest.mock import MagicMock
 
 @pytest.fixture
 def mock_config():
@@ -42,7 +41,7 @@ def test_get_bot_client():
 def test_no_bot_account_configured(mock_config):
     mock_config.bot_accounts = []
     with pytest.raises(ValueError, match="No bot account is configured."):
-        import backend.bot_account_manager as bot_account_manager
+        import backend.bot_account_manager as bot_account_manager  # noqa: F401
 
 
 def test_multiple_default_bot_accounts_configured(mock_config):

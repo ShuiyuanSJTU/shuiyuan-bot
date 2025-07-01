@@ -2,7 +2,7 @@ import time
 import logging
 import datetime
 import feedparser
-from sqlalchemy import Column, String, Integer, DateTime, UniqueConstraint, Index
+from sqlalchemy import Column, String, Integer, DateTime, Index
 from sqlalchemy.sql import func
 from feedparser.util import FeedParserDict
 from urllib.parse import urljoin
@@ -15,7 +15,6 @@ from ...db import Base
 from ...db import db_manager as DBManager
 from ...model import Post
 from ...bot_action import BotAction, scheduled
-from ...bot_kv_storage import storage as Storage
 from ...bot_account_manager import account_manager as AccountManager
 
 logger = logging.getLogger(__name__)
@@ -158,5 +157,5 @@ class BotRssFwd(BotAction):
             for task in self.config.tasks:
                 try:
                     self.process_task(task)
-                except Exception as e:
+                except Exception:
                     logger.exception(f"Failed to process RSS forward task {task.endpoint}.")

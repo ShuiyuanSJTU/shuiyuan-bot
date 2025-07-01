@@ -1,10 +1,7 @@
 import pandas as pd
-from datetime import timedelta
 import logging
 
 from ...utils.redis_cache import redis_cache
-from ...bot_action import on, ActionResult
-from ...model.post import Post
 
 from .base_bot_report_action import BaseBotReportAction
 from .query_database import query_database, retry_when_timeout

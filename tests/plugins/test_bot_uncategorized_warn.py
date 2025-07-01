@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 @pytest.fixture
 def init_table(mock_config):
     from backend.db import DBManager
-    import backend.plugins.bot_uncategorized_warn.bot_uncategorized_warn
+    import backend.plugins.bot_uncategorized_warn.bot_uncategorized_warn  # noqa: F401
     db_manager = DBManager()
     db_manager.init_tables()
-    with db_manager.scoped_session() as session:
+    with db_manager.scoped_session():
         yield
 
 @pytest.fixture(scope="module")

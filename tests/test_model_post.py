@@ -2,7 +2,7 @@ import pytest
 import json
 import os.path
 
-from backend.model.post import Post, PostWebhook, PostAPI
+from backend.model.post import PostWebhook, PostAPI
 from backend.model.user import BasicUser
 
 

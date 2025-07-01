@@ -5,8 +5,6 @@ import pickle
 import logging
 
 from ...utils.redis_cache import redis_cache
-from ...bot_action import on, ActionResult
-from ...model import Post
 
 from .base_bot_report_action import BaseBotReportAction
 from .preprocess_data import preprocess_visit_data
@@ -94,7 +92,7 @@ class BotReadReport(BaseBotReportAction):
         raw = ''
 
         if visit_data['days_visited'] >= 365:
-            raw += f"你2024年一天不落地打开水源，想必水源已经成为你生活的一部分吧！\n\n"
+            raw += "你2024年一天不落地打开水源，想必水源已经成为你生活的一部分吧！\n\n"
         else:
             days_visited_percentile = int(
                 (1-visit_data['days_visited_rank']/len(self.global_report_data))*100)
@@ -116,7 +114,7 @@ class BotReadReport(BaseBotReportAction):
                 (1-(visit_data['time_read_rank']-1)/len(self.global_report_data))*1000)/10
             raw += f"超过{time_read_percentile:.1f}%的水源用户\n\n"
 
-        raw += f"### 你2024年阅读最多的话题是：\n\n"
+        raw += "### 你2024年阅读最多的话题是：\n\n"
 
         raw += table
 

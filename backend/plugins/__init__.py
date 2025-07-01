@@ -4,7 +4,6 @@ import importlib
 import logging
 
 from ..bot_action import BotAction
-from ..db import db_manager as DBManager
 from ..bot_manager import bot_manager as BotManager
 
 def load_plugins():
@@ -24,7 +23,7 @@ def load_plugins():
                 if isinstance(obj, type) and issubclass(obj, BotAction):
                     if obj.action_name != "BotActionBase":
                         collected_actions.append(obj)
-                    elif not obj is BotAction:
+                    elif obj is not BotAction:
                         logging.warning(
                             f"Class {obj} is a subclass of BotAction but does not have a valid action_name, so it is not registered.")
     for action_cls in collected_actions:

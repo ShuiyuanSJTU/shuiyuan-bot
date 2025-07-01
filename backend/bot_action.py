@@ -5,7 +5,7 @@ from .bot_config import config as Config
 from .utils.bot_post_check import post_created_by_bot, post_mention_bot, post_reply_to_bot
 import logging
 from collections import namedtuple
-from typing import Optional, Type, Dict, Any
+from typing import Optional, Dict, Any
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)

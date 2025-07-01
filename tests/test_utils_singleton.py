@@ -1,4 +1,3 @@
-import pytest
 from backend.utils.singleton import Singleton
 
 def test_singleton_instance():

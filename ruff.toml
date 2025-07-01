@@ -1,0 +1,7 @@
+include = [
+  "pyproject.toml", 
+  "*.py", 
+  "backend/**/*.py",
+  "tests/**/*.py",
+  "alembic/**/*.py",
+]

@@ -145,10 +145,10 @@ class BotDice(BotAction):
                     post.raw)
         except (ParamError, UnsupportedDistributionError, ParseError) as e:
             reply_text = f"错误：{str(e)}\n 使用 '投掷 帮助' 查看帮助。"
-        except ValueError as e:
-            reply_text = f"错误：数值错误。"
+        except ValueError:
+            reply_text = "错误：数值错误。"
         except Exception as e:
-            reply_text = f"错误：未知错误。"
+            reply_text = "错误：未知错误。"
             print(e)
 
         if result_numbers is not None:

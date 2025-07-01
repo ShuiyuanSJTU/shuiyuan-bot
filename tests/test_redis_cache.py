@@ -86,7 +86,7 @@ def test_decorator_with_callable_key():
     assert result == 20
 
 def test_decorator_when_redis_unavailable():
-    with patch("redis.Redis", side_effect=Exception("Connection Error")) as mock_redis:
+    with patch("redis.Redis", side_effect=Exception("Connection Error")):
         import backend.utils.redis_cache as redis_cache
 
         assert redis_cache._redis_available is False
@@ -127,5 +127,5 @@ def test_exception_in_function(caplog):
 
     client.get = MagicMock(return_value=None)
     client.set = MagicMock()
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(RuntimeError):
         test_function(5)

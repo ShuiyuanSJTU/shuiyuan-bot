@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import String, Integer, Column, inspect
@@ -32,7 +32,7 @@ def test_db_manager_initialization(patch_bot_config):
     assert isinstance(db_manager._sessionmaker, sessionmaker)
 
 def test_session_commit():
-    from backend.db import DBManager, Base
+    from backend.db import DBManager
     db_manager = DBManager()
     db_manager._sessionmaker = MagicMock(return_value=MagicMock())
     with db_manager.session() as session:

@@ -1,7 +1,7 @@
 import hmac
 import hashlib
 import ipaddress
-from flask import request, abort, Request
+from flask import Request
 
 
 def verify_discourse_webhook_request(request: Request, secret: str) -> bool:
