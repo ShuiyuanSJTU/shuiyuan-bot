@@ -6,11 +6,16 @@ from bs4 import BeautifulSoup
 def post_created_by_bot(post: Post):
     return post.username in account_manager.usernames
 
-def post_mention_bot(post:Post, bot_username: Optional[str] = None):
+def post_mention_bot(post: Post, bot_username: Optional[str] = None):
     if bot_username is None:
         bot_username = account_manager.default_bot_client.username
     soup = BeautifulSoup(post.cooked, 'html.parser')
-    mention_tags = soup.find_all('a',  class_='mention', href=f"/u/{bot_username}")
+    mention_tags = soup.find_all(
+        lambda tag: tag.name == 'a' and
+                    tag.get('class') == ['mention'] and
+                    tag.get('href') == f"/u/{bot_username}" and
+                    tag.get_text() == f"@{bot_username}"
+    )
     return bool(mention_tags)
 
 def post_reply_to_bot(post: Post, bot_username: Optional[str] = None):
