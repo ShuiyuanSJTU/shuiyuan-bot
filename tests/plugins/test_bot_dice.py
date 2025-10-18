@@ -38,6 +38,7 @@ def test_bot_dice_should_reply(patch_bot_config, test_post):
     bot_dice = BotDice()
     assert bot_dice.should_response(test_post) is False
     test_post.raw = "@bot1 投掷\n1234"
+    test_post.cooked = '<p><a class="mention" href="/u/bot1">@bot1</a> 投掷<br>1234</p>'
     assert bot_dice.should_response(test_post) is True
 
 
