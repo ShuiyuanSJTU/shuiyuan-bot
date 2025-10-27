@@ -1,5 +1,7 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
+from functools import cached_property
+from bs4 import BeautifulSoup
 
 from .user import BasicUser
 
@@ -40,6 +42,10 @@ class Post(BaseModel):
     wiki: bool
     accepted_answer: Optional[bool] = None
     topic_accepted_answer: Optional[bool] = None
+
+    @cached_property
+    def cooked_soup(self) -> BeautifulSoup:
+        return BeautifulSoup(self.cooked, 'lxml')
 
 
 class PostAPI(Post):

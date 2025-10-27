@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from backend.model import Post
 import os
 import json
+from copy import deepcopy
 
 
 @pytest.fixture
@@ -36,10 +37,12 @@ def test_bot_dice_init(patch_bot_config):
 def test_bot_dice_should_reply(patch_bot_config, test_post):
     from backend.plugins.bot_dice.bot_dice import BotDice
     bot_dice = BotDice()
-    assert bot_dice.should_response(test_post) is False
-    test_post.raw = "@bot1 投掷\n1234"
-    test_post.cooked = '<p><a class="mention" href="/u/bot1">@bot1</a> 投掷<br>1234</p>'
-    assert bot_dice.should_response(test_post) is True
+    post = deepcopy(test_post)
+    assert bot_dice.should_response(post) is False
+    post = deepcopy(test_post)
+    post.raw = "@bot1 投掷\n1234"
+    post.cooked = '<p><a class="mention" href="/u/bot1">@bot1</a> 投掷<br>1234</p>'
+    assert bot_dice.should_response(post) is True
 
 
 @pytest.mark.parametrize('input_str, expected_len', [
