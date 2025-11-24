@@ -10,7 +10,7 @@ from ...bot_manager import bot_manager as BotManager
 
 class BotSummaryReport(BaseBotReportAction):
     action_name = "BotSummaryReport"
-    trigger_keyword = "我的2024报告"
+    trigger_keyword = "我的2025报告"
 
     def __init__(self) -> None:
         super().__init__()

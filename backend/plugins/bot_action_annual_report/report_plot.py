@@ -8,7 +8,7 @@ from scipy.ndimage import gaussian_filter1d
 from matplotlib.colors import LinearSegmentedColormap
 from io import BytesIO
 
-CURRENT_YEAR = 2024
+CURRENT_YEAR = 2025
 
 
 def get_most_active_hour_period(hour_count, window_size=6):

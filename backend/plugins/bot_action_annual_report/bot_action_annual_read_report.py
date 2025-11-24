@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class BotReadReport(BaseBotReportAction):
     action_name = "BotReadReport"
-    trigger_keyword = "我的2024阅读报告"
+    trigger_keyword = "我的2025阅读报告"
 
     def __init__(self) -> None:
         super().__init__()
@@ -27,7 +27,7 @@ class BotReadReport(BaseBotReportAction):
         if not os.path.exists(processed_data_path):
             logger.info("Processed data not found, querying database...")
             raw_data = query_database_paged(self.api, self.config.user_visit_query_id, {
-            }, self.config.query_group, page_size=500000)
+            }, self.config.query_group, page_size=300000)
             logger.info("Query finished, preprocessing data...")
             preprocess_visit_data(raw_data, processed_data_path)
         with open(processed_data_path, "rb") as f:
@@ -92,13 +92,13 @@ class BotReadReport(BaseBotReportAction):
         raw = ''
 
         if visit_data['days_visited'] >= 365:
-            raw += "你2024年一天不落地打开水源，想必水源已经成为你生活的一部分吧！\n\n"
+            raw += "你2025年一天不落地打开水源，想必水源已经成为你生活的一部分吧！\n\n"
         else:
             days_visited_percentile = int(
                 (1-visit_data['days_visited_rank']/len(self.global_report_data))*100)
-            raw += f"你2024年共打开水源{visit_data['days_visited']:.0f}天，超过了{days_visited_percentile:.0f}%的用户，期待明年能在水源见到更活跃的你！\n\n"
+            raw += f"你2025年共打开水源{visit_data['days_visited']:.0f}天，超过了{days_visited_percentile:.0f}%的用户，期待明年能在水源见到更活跃的你！\n\n"
 
-        raw += f"你2024年共阅读{visit_data['posts_read']:.0f}条帖子，"
+        raw += f"你2025年共阅读{visit_data['posts_read']:.0f}条帖子，"
         if visit_data['posts_read_rank'] <= 100:
             raw += f"在所有用户中排名第{visit_data['posts_read_rank']:.0f}!\n\n"
         else:
@@ -106,7 +106,7 @@ class BotReadReport(BaseBotReportAction):
                 (1-(visit_data['posts_read_rank']-1)/len(self.global_report_data))*1000)/10
             raw += f"超过{posts_read_percentile:.1f}%的水源用户\n\n"
 
-        raw += f"你2024年共阅读了{visit_data['time_read']/3600:.0f}小时，"
+        raw += f"你2025年共阅读了{visit_data['time_read']/3600:.0f}小时，"
         if visit_data['time_read_rank'] <= 100:
             raw += f"在所有用户中排名第{visit_data['time_read_rank']:.0f}!\n\n"
         else:
@@ -114,7 +114,7 @@ class BotReadReport(BaseBotReportAction):
                 (1-(visit_data['time_read_rank']-1)/len(self.global_report_data))*1000)/10
             raw += f"超过{time_read_percentile:.1f}%的水源用户\n\n"
 
-        raw += "### 你2024年阅读最多的话题是：\n\n"
+        raw += "### 你2025年阅读最多的话题是：\n\n"
 
         raw += table
 

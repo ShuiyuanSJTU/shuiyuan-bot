@@ -22,7 +22,7 @@ def query_database(api: BotAPI, query_id: int, params=None, query_group="bot"):
     return res
 
 
-def query_database_paged(api: BotAPI, query_id: int, params=None, query_group="bot", page_size=500000):
+def query_database_paged(api: BotAPI, query_id: int, params=None, query_group="bot", page_size=300000):
     result = {
         "rows": [],
         "columns": None,

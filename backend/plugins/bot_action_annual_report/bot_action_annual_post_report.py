@@ -15,12 +15,12 @@ from ...model import Post
 
 logger = logging.getLogger(__name__)
 
-CURRENT_YEAR = 2024
+CURRENT_YEAR = 2025
 
 
 class BotPostReport(BaseBotReportAction):
     action_name = "BotPostReport"
-    trigger_keyword = "我的2024发帖报告"
+    trigger_keyword = "我的2025发帖报告"
 
     def __init__(self) -> None:
         super().__init__()
@@ -33,7 +33,7 @@ class BotPostReport(BaseBotReportAction):
         if not os.path.exists(processed_data_path):
             logger.info("Processed data not found, querying database...")
             raw_data = query_database_paged(self.api, self.config.user_post_query_id, {
-            }, self.config.query_group, page_size=500000)
+            }, self.config.query_group, page_size=300000)
             logger.info("Query finished, preprocessing data...")
             preprocess_posts_data(raw_data, processed_data_path)
 
@@ -97,7 +97,7 @@ class BotPostReport(BaseBotReportAction):
         post_count = user_table_row['post_count']
         post_count_rank = user_table_row['post_count_rank']
 
-        raw += f"你2024年在水源创建了{post_count:.0f}条帖子，"
+        raw += f"你2025年在水源创建了{post_count:.0f}条帖子，"
         if post_count_rank < 100:
             raw += f"在所有用户中排名第{post_count_rank:.0f}！"
         else:
@@ -131,11 +131,11 @@ class BotPostReport(BaseBotReportAction):
 
         days_posted = user_table_row['post_days']
         if days_posted >= 361:
-            raw += "你2024年一天不落地在水源发帖，每日打卡！\n\n"
+            raw += "你2025年一天不落地在水源发帖，每日打卡！\n\n"
         elif days_posted > 0:
             post_days_percentage = int(
                 (1 - (user_table_row['post_days_rank']-1)/self.all_user_count)*1000)/10
-            raw += f"你2024年共在水源发帖{days_posted:.0f}天，超过了{post_days_percentage:.1f}%的用户"
+            raw += f"你2025年共在水源发帖{days_posted:.0f}天，超过了{post_days_percentage:.1f}%的用户"
             if days_posted < 30:
                 raw += "，或许可以多在水源发发帖，和大家多多交流呢？\n\n"
             else:
@@ -145,7 +145,7 @@ class BotPostReport(BaseBotReportAction):
         if user_post_day_count[most_post_day_of_year] > 10:
             most_post_day_of_year_datetime = datetime(
                 CURRENT_YEAR, 1, 1) + timedelta(days=most_post_day_of_year)
-            raw += f"你2024年在水源发帖最多的一天是{most_post_day_of_year_datetime.month}月{most_post_day_of_year_datetime.day}日，共发了{user_post_day_count[most_post_day_of_year]:.0f}条帖子，还记得那一天发生了什么吗？\n\n"
+            raw += f"你2025年在水源发帖最多的一天是{most_post_day_of_year_datetime.month}月{most_post_day_of_year_datetime.day}日，共发了{user_post_day_count[most_post_day_of_year]:.0f}条帖子，还记得那一天发生了什么吗？\n\n"
 
         post_weekday_count = self.get_activity_per_weekday(user_post_day_count)
         most_post_weekday = post_weekday_count.argmax()

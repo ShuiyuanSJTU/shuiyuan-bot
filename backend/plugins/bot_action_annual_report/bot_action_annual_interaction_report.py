@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class BotInteractionReport(BaseBotReportAction):
     action_name = "BotInteractionReport"
-    trigger_keyword = "我的2024互动报告"
+    trigger_keyword = "我的2025互动报告"
 
     @retry_when_timeout()
     def get_data_from(self, user_id):
@@ -57,14 +57,14 @@ class BotInteractionReport(BaseBotReportAction):
 
         try:
             table_from = self.get_table_from(user_id)
-            resopnse.append("### 这是2024年与你互动最多的用户，快和他们打个招呼吧！")
+            resopnse.append("### 这是2025年与你互动最多的用户，快和他们打个招呼吧！")
             resopnse.append(table_from)
         except Exception as e:
             logger.error(e)
 
         try:
             table_to = self.get_table_to(user_id)
-            resopnse.append("### 2024年你与这些用户互动最多，还记得你们之间发生了什么有趣的事情吗？")
+            resopnse.append("### 2025年你与这些用户互动最多，还记得你们之间发生了什么有趣的事情吗？")
             resopnse.append(table_to)
         except Exception as e:
             logger.error(e)
