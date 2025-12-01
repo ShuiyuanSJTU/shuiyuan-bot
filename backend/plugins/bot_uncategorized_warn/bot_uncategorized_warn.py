@@ -54,7 +54,7 @@ class BotUncategorizedWarn(BotAction):
                     else:
                         if record.created_at.replace(tzinfo=UTC) < datetime.datetime.now(UTC) - datetime.timedelta(minutes=30):
                             record.status = WarningStatus.EXPIRED
-                            self.api.close_topic(topic.id)
+                            self.api.archive_topic(topic.id)
                             record.save()
                 except Exception as e:
                     logger.exception(f"Error checking warning for topic {record.topic_id}: {e}")

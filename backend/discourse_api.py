@@ -65,6 +65,9 @@ class BotAPI:
     def close_topic(self, topic_id, close=True, until=None):
         return self.update_topic_status(topic_id, 'closed', close, until)
 
+    def archive_topic(self, topic_id, archive=True, until=None):
+        return self.update_topic_status(topic_id, 'archived', archive, until)
+
     def update_topic_status(self, topic_id, status, enabled, until=None):
         data = {
             'status': status,

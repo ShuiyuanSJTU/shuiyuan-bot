@@ -58,7 +58,7 @@ def test_on_topic_created(test_data):
     assert record.post_id == 123
     assert record.status == WarningStatus.PENDING
 
-def test_check_warnings_close_topic(test_data):
+def test_check_warnings_archive_topic(test_data):
     from backend.plugins.bot_uncategorized_warn.bot_uncategorized_warn import BotUncategorizedWarn, UncategorizedTopicWarningRecord, WarningStatus
     action = BotUncategorizedWarn()
 
@@ -71,7 +71,7 @@ def test_check_warnings_close_topic(test_data):
 
     record_pending = UncategorizedTopicWarningRecord.find(topic_id=1)
     assert record_pending.status == WarningStatus.EXPIRED
-    action.api.close_topic.assert_called_once_with(test_data['topic']['id'])
+    action.api.archive_topic.assert_called_once_with(test_data['topic']['id'])
 
 def test_check_warnings_remove_warning(test_data):
     from backend.plugins.bot_uncategorized_warn.bot_uncategorized_warn import BotUncategorizedWarn, UncategorizedTopicWarningRecord, WarningStatus
