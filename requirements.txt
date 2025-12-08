@@ -20,3 +20,4 @@ tabulate
 lxml
 feedparser
 beautifulsoup4
+Jinja2

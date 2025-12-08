@@ -1,4 +1,5 @@
 import pandas as pd
+from jinja2 import Template
 import logging
 
 from ...utils.redis_cache import redis_cache
@@ -7,6 +8,14 @@ from .base_bot_report_action import BaseBotReportAction
 from .query_database import query_database, retry_when_timeout
 
 logger = logging.getLogger(__name__)
+
+_USER_TEMPLATE = Template(
+    '<div data-user-card="{{ username }}">'
+    '<img loading="lazy" alt="{{ username }}" width="24" height="24" src="{{ avatar_src }}" class="avatar" title="{{ username }}">'
+    '<a class="mention">&#8203;@{{ username }}</a>'
+    '</div>',
+    autoescape=True
+)
 
 class BotInteractionReport(BaseBotReportAction):
     action_name = "BotInteractionReport"
@@ -29,9 +38,7 @@ class BotInteractionReport(BaseBotReportAction):
         username = user_info['username']
         avatar_template = user_info['avatar_template']
         avatar_src = avatar_template.format(size=48)
-        avatar_html = '<img loading="lazy" alt="{username}" width="24" height="24" src="{src}" class="avatar" title="{username}">'.format(
-            username=username, src=avatar_src)
-        return f"{avatar_html} @{username}"
+        return _USER_TEMPLATE.render(username=username, avatar_src=avatar_src)
 
     @classmethod
     def render_data(cls, data):
