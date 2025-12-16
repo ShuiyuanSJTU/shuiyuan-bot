@@ -2,6 +2,9 @@ from ...discourse_api import BotAPI
 from fluent_discourse import DiscourseError
 import json
 from functools import wraps
+import threading
+
+GLOBAL_QUERY_LOCK = threading.Lock()
 
 def format_params(params):
     if params is None:
@@ -15,10 +18,12 @@ def format_params(params):
             else:
                 params[k] = str(v)
         return params
+
 def query_database(api: BotAPI, query_id: int, params=None, query_group="bot"):
     query = format_params(params)
-    res = api.client.g[query_group].reports[query_id].run.json.post(
-        {"params": json.dumps(query)})
+    with GLOBAL_QUERY_LOCK:
+        res = api.client.g[query_group].reports[query_id].run.json.post(
+            {"params": json.dumps(query)})
     return res
 
 
