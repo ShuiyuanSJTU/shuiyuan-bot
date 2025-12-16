@@ -1,4 +1,5 @@
 
+import os
 import eventlet
 import logging
 from flask import Flask
@@ -12,8 +13,9 @@ from security import verify_discourse_webhook_request, verify_ip_address, verify
 # Set up logging
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
+os.makedirs('logs', exist_ok=True)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler = RotatingFileHandler('app.warning.log', maxBytes=1024 * 1024, backupCount=2)
+file_handler = RotatingFileHandler('logs/app.warning.log', maxBytes=1024 * 1024, backupCount=2)
 file_handler.setLevel(logging.WARNING)
 file_handler.setFormatter(formatter)
 

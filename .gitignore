@@ -6,4 +6,5 @@
 htmlcov
 .coverage
 *.log
+/logs/
 /data/
