@@ -38,5 +38,5 @@ class Topic(BaseModel):
     last_poster: Optional[BasicUser] = None
     summarizable: Optional[bool] = None
     pending_posts: Optional[List[Any]] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[List[dict]] = None
     tags_descriptions: Optional[Dict[str, str]] = None
