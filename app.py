@@ -1,10 +1,10 @@
 
 import os
-import eventlet
 import logging
+import signal
+import sys
 from flask import Flask
 from flask import request, abort
-from eventlet import wsgi
 from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler
 from backend.bot import Config, BotManager
@@ -30,6 +30,18 @@ root_logger.addHandler(console_handler)
 scheduler = BackgroundScheduler()
 BotManager.register_jobs_to_scheduler(scheduler)
 scheduler.start()
+
+# Graceful shutdown: stop scheduler on SIGTERM/SIGINT to avoid long exit delays
+def _shutdown(signum, frame):
+    logging.info(f"Received signal {signum}, shutting down scheduler and exiting")
+    try:
+        scheduler.shutdown(wait=False)
+    except Exception:
+        logging.exception("Error while shutting down scheduler")
+    sys.exit(0)
+signal.signal(signal.SIGTERM, _shutdown)
+signal.signal(signal.SIGINT, _shutdown)
+
 app = Flask(__name__)
 
 @app.before_request
@@ -57,6 +69,7 @@ def endpoint():
         return "ok"
 
 if __name__ == "__main__":
-    logging.info(f"Starting server on {Config.server.bind_address}:{Config.server.bind_port}")
-    wsgi.server(eventlet.listen(
-        (Config.server.bind_address, Config.server.bind_port)), app, log_output=False)
+    logging.info(f"Starting development server on {Config.server.bind_address}:{Config.server.bind_port}")
+    # For development / local runs we use Flask's builtin server. In production,
+    # prefer running with Gunicorn (see Dockerfile) to handle multiple workers.
+    app.run(host=Config.server.bind_address, port=Config.server.bind_port)

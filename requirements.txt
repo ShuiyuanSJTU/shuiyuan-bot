@@ -9,7 +9,7 @@ alembic
 pytz
 
 # frontend
-eventlet
+gunicorn
 flask
 
 # Optional for plugins

@@ -8,4 +8,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 80
 
-CMD ["python", "app.py"]
+# Use gunicorn with gthread worker for production instead of eventlet
+CMD ["gunicorn", "-w", "1", "-k", "gthread", "-b", "0.0.0.0:80", "app:app"]
