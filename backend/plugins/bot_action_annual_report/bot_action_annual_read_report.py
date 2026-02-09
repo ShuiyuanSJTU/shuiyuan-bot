@@ -48,8 +48,8 @@ class BotReadReport(BaseBotReportAction):
 
     @staticmethod
     def render_post_link(post_id, title=''):
-        escaped_title = title.replace("\\", "\\\\").replace(
-            '|', '\|').replace('[', '\[').replace(']', '\]')
+        escaped_title = title.replace('\\', '\\\\').replace(
+            r'|', r'\|').replace(r'[', r'\[').replace(r']', r'\]')
         return f"[{escaped_title}](/t/{post_id}?silent=true)"
 
     @staticmethod
