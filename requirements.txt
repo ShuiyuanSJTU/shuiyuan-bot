@@ -6,6 +6,7 @@ PyYAML
 apscheduler
 sqlalchemy
 alembic
+pytz
 
 # frontend
 eventlet

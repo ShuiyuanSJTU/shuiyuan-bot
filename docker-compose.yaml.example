@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: redis-container
+    restart: always
+    networks:
+      - app-network
+    volumes:
+      - ./data/redis_data:/data
+
+  # optional if you want to use rss forwarding feature
+  rsshub:
+    # two ways to enable puppeteer:
+    # * comment out marked lines, then use this image instead: diygod/rsshub:chromium-bundled
+    # * (consumes more disk space and memory) leave everything unchanged
+    image: diygod/rsshub
+    restart: always
+    ports:
+        - '127.0.0.1:1200:80'
+    environment:
+        PORT: 80
+        NODE_ENV: production
+        CACHE_TYPE: redis
+        REDIS_URL: 'redis://redis-container:6379/'
+        CACHE_EXPIRE: 30
+        LOGGER_LEVEL: warn
+        DEBUG_INFO: "false"
+        SHOW_LOGGER_TIMESTAMP: "true"
+    depends_on:
+        - redis
+        # - browserless  # marked
+    networks:
+        - app-network
+
+  web:
+    build: .
+    container_name: shuiyuan-bot
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - redis
+    networks:
+      - app-network
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config.yaml:/app/config.yaml
+
+networks:
+  app-network:
+    driver: bridge

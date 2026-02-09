@@ -29,7 +29,7 @@ class BotConfig(BaseModel):
     site_url: str
     limited_mode: bool = False
     limited_usernames: list[str] = []
-    redis_host: str = ""
+    redis_host: str = "redis"
     redis_port: int = 6379
     server: ServerConfig = ServerConfig()
     bot_accounts: list[BotAccount]
