@@ -4,6 +4,7 @@ from .utils.singleton import Singleton
 from .bot_action import BotAction, ActionResult
 from .model import Post, Topic
 from .bot_config import config as Config
+from .event_context import EventContext
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,13 @@ class BotManager:
                 logger.debug(f"Schedule job {handler} with schedule {schedule.args} {schedule.kwargs} is registered.")
         self._should_warn_unregistered_schedule = False
 
-    def trigger_event(self, event: str, data: dict, raw_body: bytes = None, event_headers: dict[str, str] = None):
+    def trigger_event(
+        self,
+        event: str,
+        data: dict,
+        raw_body: bytes | None = None,
+        event_headers: dict[str, str] | None = None,
+    ):
         # if there are schedules that are not registered, warn the user
         if self._should_warn_unregistered_schedule:
             logger.warning(
@@ -48,11 +55,13 @@ class BotManager:
             self._should_warn_unregistered_schedule = False
 
         args = []
-        kwargs = {
-            'raw_data': data,
-            'raw_body': raw_body,
-            'event_headers': event_headers or {},
-        }
+        event_context = EventContext(
+            event=event,
+            raw_data=data,
+            raw_body=raw_body,
+            event_headers=dict(event_headers or {}),
+        )
+        kwargs = {'event_context': event_context}
         match event:
             case "post_created":
                 post = Post(**data['post'])

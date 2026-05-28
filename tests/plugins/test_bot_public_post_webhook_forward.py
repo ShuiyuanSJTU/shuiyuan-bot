@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from backend.event_context import EventContext
 from backend.model.post import Post
 
 
@@ -37,6 +38,15 @@ def create_action():
     return BotPublicPostWebhookForward()
 
 
+def create_event_context(webhook_data, raw_body=None, event_headers=None):
+    return EventContext(
+        event="post_created",
+        raw_data=webhook_data,
+        raw_body=raw_body if raw_body is not None else json.dumps(webhook_data).encode(),
+        event_headers=event_headers or {"X-Discourse-Event": "post_created"},
+    )
+
+
 def test_forward_public_post_webhook(webhook_data):
     action = create_action()
     raw_body = json.dumps(webhook_data).encode()
@@ -52,9 +62,7 @@ def test_forward_public_post_webhook(webhook_data):
     ) as mock_post:
         action.on_post_created(
             Post(**webhook_data["post"]),
-            raw_data=webhook_data,
-            raw_body=raw_body,
-            event_headers=event_headers,
+            event_context=create_event_context(webhook_data, raw_body, event_headers),
         )
 
     mock_post.assert_called_once_with(
@@ -75,9 +83,7 @@ def test_skip_when_category_id_is_null(webhook_data):
     ) as mock_post:
         action.on_post_created(
             Post(**webhook_data["post"]),
-            raw_data=webhook_data,
-            raw_body=json.dumps(webhook_data).encode(),
-            event_headers={"X-Discourse-Event": "post_created"},
+            event_context=create_event_context(webhook_data),
         )
 
     mock_post.assert_not_called()
@@ -93,9 +99,7 @@ def test_skip_when_category_id_is_missing(webhook_data, caplog):
     ) as mock_post:
         action.on_post_created(
             Post(**webhook_data["post"]),
-            raw_data=webhook_data,
-            raw_body=json.dumps(webhook_data).encode(),
-            event_headers={"X-Discourse-Event": "post_created"},
+            event_context=create_event_context(webhook_data),
         )
 
     mock_post.assert_not_called()
@@ -112,9 +116,7 @@ def test_forward_failure_does_not_raise(webhook_data, caplog):
     ):
         action.on_post_created(
             Post(**webhook_data["post"]),
-            raw_data=webhook_data,
-            raw_body=json.dumps(webhook_data).encode(),
-            event_headers={"X-Discourse-Event": "post_created"},
+            event_context=create_event_context(webhook_data),
         )
 
     assert "status code 500" in caplog.text
@@ -129,9 +131,7 @@ def test_forward_exception_does_not_raise(webhook_data, caplog):
     ):
         action.on_post_created(
             Post(**webhook_data["post"]),
-            raw_data=webhook_data,
-            raw_body=json.dumps(webhook_data).encode(),
-            event_headers={"X-Discourse-Event": "post_created"},
+            event_context=create_event_context(webhook_data),
         )
 
     assert "Forward public post webhook failed" in caplog.text
@@ -148,9 +148,7 @@ def test_missing_webhook_url_does_not_forward(patch_bot_config, webhook_data):
     ) as mock_post:
         action.on_post_created(
             Post(**webhook_data["post"]),
-            raw_data=webhook_data,
-            raw_body=json.dumps(webhook_data).encode(),
-            event_headers={"X-Discourse-Event": "post_created"},
+            event_context=create_event_context(webhook_data),
         )
 
     mock_post.assert_not_called()

@@ -42,6 +42,7 @@ def mock_plugins():
         yield
 
 def test_trigger_event_post_created(patch_bot_config, test_data, mock_activated_actions):
+    from backend.event_context import EventContext
     from backend.bot_manager import bot_manager as BotManager
     from backend.model import Post
     mock_action = MagicMock()
@@ -55,11 +56,16 @@ def test_trigger_event_post_created(patch_bot_config, test_data, mock_activated_
     assert args == ('post_created',)
     assert isinstance(kwargs['post'], Post)
     assert kwargs['post'].id == test_data['post']['id']
-    assert kwargs['raw_data'] == test_data
-    assert kwargs['raw_body'] is None
-    assert kwargs['event_headers'] == {}
+    assert isinstance(kwargs['event_context'], EventContext)
+    assert kwargs['event_context'].event == 'post_created'
+    assert kwargs['event_context'].raw_data == test_data
+    assert kwargs['event_context'].raw_body is None
+    assert kwargs['event_context'].event_headers == {}
+    assert 'raw_data' not in kwargs
+    assert 'raw_body' not in kwargs
+    assert 'event_headers' not in kwargs
 
-def test_trigger_event_passes_raw_webhook_context_to_supported_handler(patch_bot_config, test_data, mock_activated_actions):
+def test_trigger_event_passes_event_context_to_supported_handler(patch_bot_config, test_data, mock_activated_actions):
     from backend.bot_action import BotAction, on
     from backend.bot_manager import bot_manager as BotManager
     patch_bot_config.action_custom_config["TestBotAction"] = {"enabled": True}
@@ -68,12 +74,13 @@ def test_trigger_event_passes_raw_webhook_context_to_supported_handler(patch_bot
         action_name = "TestBotAction"
 
         @on("post_created")
-        def handle_post_created(self, post, raw_data, raw_body, event_headers):
+        def handle_post_created(self, post, event_context):
             return {
                 "post_id": post.id,
-                "raw_data": raw_data,
-                "raw_body": raw_body,
-                "event_headers": event_headers,
+                "event": event_context.event,
+                "raw_data": event_context.raw_data,
+                "raw_body": event_context.raw_body,
+                "event_headers": event_context.event_headers,
             }
 
     raw_body = b'{"post":{"id":3859}}'
@@ -90,12 +97,13 @@ def test_trigger_event_passes_raw_webhook_context_to_supported_handler(patch_bot
 
     assert result == [{
         "post_id": test_data['post']['id'],
+        "event": "post_created",
         "raw_data": test_data,
         "raw_body": raw_body,
         "event_headers": event_headers,
     }]
 
-def test_trigger_event_filters_raw_webhook_context_for_legacy_handler(patch_bot_config, test_data, mock_activated_actions):
+def test_trigger_event_filters_event_context_for_legacy_handler(patch_bot_config, test_data, mock_activated_actions):
     from backend.bot_action import BotAction, on
     from backend.bot_manager import bot_manager as BotManager
     patch_bot_config.action_custom_config["TestBotAction"] = {"enabled": True}
