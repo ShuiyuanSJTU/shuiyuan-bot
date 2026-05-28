@@ -3,6 +3,7 @@ from .model.post import Post
 from .bot_account_manager import account_manager as BotManager
 from .bot_config import config as Config
 from .utils.bot_post_check import post_created_by_bot, post_mention_bot, post_reply_to_bot
+import inspect
 import logging
 from collections import namedtuple
 from typing import Optional, Dict, Any
@@ -65,7 +66,8 @@ class BotAction:
 
     def trigger(self, event: str, *args, **kwargs):
         if event in self._events_listeners:
-            return self._events_listeners[event](*args, **kwargs)
+            event_handler = self._events_listeners[event]
+            return event_handler(*args, **event_handler.filter_kwargs(kwargs))
         return None
 
 def scheduled(*args, **kwargs):
@@ -123,6 +125,30 @@ class BotActionEventHandler:
         self.events = [] if events is None else events
         self.schedules = [] if schedules is None else schedules
         self.func = func
+        signature = inspect.signature(func)
+        parameters = signature.parameters
+        self._accepts_var_kwargs = any(
+            param.kind == inspect.Parameter.VAR_KEYWORD
+            for param in parameters.values()
+        )
+        self._accepted_kwargs = frozenset(
+            name
+            for name, param in parameters.items()
+            if name != "self" and param.kind in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            )
+        )
 
     def __call__(self, *args, **kwargs):
         return self.func(self.action, *args, **kwargs)
+
+    def filter_kwargs(self, kwargs: dict) -> dict:
+        if self._accepts_var_kwargs:
+            return kwargs
+
+        return {
+            key: value
+            for key, value in kwargs.items()
+            if key in self._accepted_kwargs
+        }
