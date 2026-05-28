@@ -1,9 +1,26 @@
 import pytest
+from contextlib import contextmanager
 from unittest.mock import MagicMock, create_autospec, patch
 import os
 import sys
 import random
 import string
+
+_MISSING = object()
+
+
+@contextmanager
+def patch_sys_module(module_name, module):
+    original_module = sys.modules.get(module_name, _MISSING)
+    sys.modules[module_name] = module
+    try:
+        yield
+    finally:
+        if original_module is _MISSING:
+            sys.modules.pop(module_name, None)
+        else:
+            sys.modules[module_name] = original_module
+
 
 @pytest.fixture(scope="session", autouse=True)
 def rename_config_file():
@@ -33,14 +50,14 @@ def bypass_db_init():
     mock_db = create_autospec('backend.db')
     mock_db.DBManager = MagicMock()
     mock_db.db_manager = mock_db.DBManager
-    with patch.dict('sys.modules', {'backend.db': mock_db}):
+    with patch_sys_module('backend.db', mock_db):
         yield mock_config
 
 @pytest.fixture
 def patch_bot_config(mock_config):
     mock_bot_config = create_autospec('backend.bot_config')
     mock_bot_config.config = mock_config
-    with patch.dict('sys.modules', {'backend.bot_config': mock_bot_config}):
+    with patch_sys_module('backend.bot_config', mock_bot_config):
         yield mock_config
 
 @pytest.fixture
@@ -67,7 +84,7 @@ def patch_bot_kv_storage(mock_kv_storage):
     mock_bot_kv_storage.storage.get.side_effect = mock_kv_storage.get
     mock_bot_kv_storage.storage.set.side_effect = mock_kv_storage.__setitem__
     mock_bot_kv_storage.storage.delete.side_effect = mock_kv_storage.__delitem__
-    with patch.dict('sys.modules', {'backend.bot_kv_storage': mock_bot_kv_storage}):
+    with patch_sys_module('backend.bot_kv_storage', mock_bot_kv_storage):
         yield mock_kv_storage
 
 @pytest.fixture
