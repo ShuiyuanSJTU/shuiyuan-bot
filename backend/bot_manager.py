@@ -40,7 +40,7 @@ class BotManager:
                 logger.debug(f"Schedule job {handler} with schedule {schedule.args} {schedule.kwargs} is registered.")
         self._should_warn_unregistered_schedule = False
 
-    def trigger_event(self, event: str, data: dict):
+    def trigger_event(self, event: str, data: dict, raw_body: bytes = None, event_headers: dict[str, str] = None):
         # if there are schedules that are not registered, warn the user
         if self._should_warn_unregistered_schedule:
             logger.warning(
@@ -48,7 +48,11 @@ class BotManager:
             self._should_warn_unregistered_schedule = False
 
         args = []
-        kwargs = {}
+        kwargs = {
+            'raw_data': data,
+            'raw_body': raw_body,
+            'event_headers': event_headers or {},
+        }
         match event:
             case "post_created":
                 post = Post(**data['post'])

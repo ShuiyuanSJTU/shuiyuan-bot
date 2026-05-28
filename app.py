@@ -60,9 +60,15 @@ def root():
 
 @app.route("/", methods=['POST'])
 def endpoint():
+    raw_body = request.get_data()
     data = request.get_json()
     event = request.headers.get('X-Discourse-Event')
-    result = BotManager.trigger_event(event, data)
+    event_headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower().startswith('x-discourse-')
+    }
+    result = BotManager.trigger_event(event, data, raw_body=raw_body, event_headers=event_headers)
     if len(result) > 0:
         return "\n\n".join(map(str, result))
     else:
