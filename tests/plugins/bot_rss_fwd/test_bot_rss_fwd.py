@@ -1,8 +1,11 @@
 import pytest
 from unittest.mock import patch, MagicMock
+import datetime
 import os
 import time
 import feedparser
+from feedparser.util import FeedParserDict
+from pydantic import ValidationError
 
 @pytest.fixture
 def init_table(mock_config):
@@ -143,3 +146,63 @@ def test_handle_new_task(init_table):
     action.on_scheduled()
     assert RssFwdRecord.where(task_id="/test_100_None").count() == 2
     assert not action.config.tasks[0].is_new_task
+
+
+def _make_feed(guid, age_days=None, use_updated=False):
+    # NOTE: FeedParserDict does not override __setattr__, so values must be
+    # set as dict keys (like real feedparser output) rather than attributes.
+    feed = FeedParserDict()
+    feed["guid"] = guid
+    feed["title"] = guid
+    feed["link"] = f"http://example.com/{guid}"
+    if age_days is not None:
+        dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=age_days)
+        if use_updated:
+            feed["updated_parsed"] = dt.utctimetuple()
+        else:
+            feed["published_parsed"] = dt.utctimetuple()
+    return feed
+
+
+def test_filter_feed_max_age(init_table, mock_rss_feed):
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd, RssFwdRecord
+    action = BotRssFwd()
+    task = action.config.tasks[0].model_copy(update={"max_age_days": 7})
+    feeds = [
+        _make_feed("old", age_days=8),
+        _make_feed("recent", age_days=6),
+        _make_feed("no-date"),
+    ]
+    result = action.filter_feed(feeds, task)
+    # dateless feeds are kept and sorted first (unknown timestamp treated as oldest)
+    assert [f.guid for f in result] == ["no-date", "recent"]
+    # skipped old feeds are NOT recorded
+    assert RssFwdRecord.where(task_id=task.task_key).count() == 0
+    # repeated filtering is stable
+    result2 = action.filter_feed(feeds, task)
+    assert [f.guid for f in result2] == ["no-date", "recent"]
+
+
+def test_filter_feed_max_age_unset_keeps_old(init_table):
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
+    action = BotRssFwd()
+    task = action.config.tasks[0]
+    assert task.max_age_days is None
+    feeds = [_make_feed("old", age_days=30)]
+    assert [f.guid for f in action.filter_feed(feeds, task)] == ["old"]
+
+
+def test_filter_feed_max_age_uses_updated_parsed(init_table):
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import BotRssFwd
+    action = BotRssFwd()
+    task = action.config.tasks[0].model_copy(update={"max_age_days": 7})
+    feeds = [_make_feed("old-updated", age_days=8, use_updated=True)]
+    assert action.filter_feed(feeds, task) == []
+
+
+def test_filter_feed_max_age_invalid():
+    from backend.plugins.bot_rss_fwd.bot_rss_fwd import RssFwdTaskConfig
+    with pytest.raises(ValidationError):
+        RssFwdTaskConfig(endpoint="/x", new_topic=True, category_id=1, max_age_days=0)
+    with pytest.raises(ValidationError):
+        RssFwdTaskConfig(endpoint="/x", new_topic=True, category_id=1, max_age_days=-1)

@@ -1,3 +1,4 @@
+import calendar
 import time
 import logging
 import datetime
@@ -7,7 +8,7 @@ from sqlalchemy.sql import func
 from feedparser.util import FeedParserDict
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 from .markdown_converter import render_md
@@ -46,6 +47,7 @@ class RssFwdTaskConfig(BaseModel):
     title_prefix: Optional[str] = None
     topic_id: Optional[int] = None
     forward_username: Optional[str] = None
+    max_age_days: Optional[float] = Field(default=None, gt=0)
 
     @property
     def task_key(self):
@@ -86,6 +88,16 @@ class BotRssFwd(BotAction):
         utc_dt = datetime.datetime(*feed_time[:6], tzinfo=datetime.timezone.utc)
         return utc_dt.astimezone().timetuple()
 
+    @staticmethod
+    def feed_published_timestamp(feed: FeedParserDict) -> Optional[float]:
+        parsed = getattr(feed, "published_parsed", None) or getattr(feed, "updated_parsed", None)
+        if parsed is None:
+            return None
+        try:
+            return float(calendar.timegm(parsed))
+        except Exception:
+            return None
+
     @classmethod
     def render_feed(cls, feed: FeedParserDict) -> str:
         element = BeautifulSoup(feed.summary, 'lxml')
@@ -99,11 +111,22 @@ class BotRssFwd(BotAction):
         record.save()
 
     def filter_feed(self, feeds: list[FeedParserDict], task: RssFwdTaskConfig) -> list[FeedParserDict]:
+        now_ts = datetime.datetime.now(datetime.timezone.utc).timestamp()
+        max_age_seconds = task.max_age_days * 86400 if task.max_age_days is not None else None
         filtered_feeds = []
+        skipped_old = 0
         for feed in feeds:
-            if RssFwdRecord.find(task_id=task.task_key, guid=feed.guid) is None:
-                filtered_feeds.append(feed)
-        filtered_feeds.sort(key=lambda feed: feed.published_parsed)
+            if RssFwdRecord.find(task_id=task.task_key, guid=feed.guid) is not None:
+                continue
+            if max_age_seconds is not None:
+                ts = self.feed_published_timestamp(feed)
+                if ts is not None and now_ts - ts > max_age_seconds:
+                    skipped_old += 1
+                    continue
+            filtered_feeds.append(feed)
+        if skipped_old:
+            logger.debug(f"{skipped_old} feeds older than {task.max_age_days} days skipped in {task.endpoint}.")
+        filtered_feeds.sort(key=lambda feed: self.feed_published_timestamp(feed) or 0)
         return filtered_feeds
 
     def create_post_or_topic(self, task: RssFwdTaskConfig, title: str, content: str):
